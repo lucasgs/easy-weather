@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace 'com.dendron.easyweather'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.dendron.easyweather"
         minSdk 24
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -29,25 +29,28 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     buildFeatures {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.2.0'
+        kotlinCompilerExtensionVersion compose_compiler_version
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
     kapt {
         correctErrorTypes true
+        javacOptions {
+            option("-J--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED")
+        }
     }
 }
 
@@ -72,9 +75,8 @@ dependencies {
     // Dagger-Hilt
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
-    implementation "androidx.hilt:hilt-compiler:1.0.0"
-    kapt "androidx.hilt:hilt-compiler:1.0.0"
-    implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
+    kapt "androidx.hilt:hilt-compiler:1.2.0"
+    implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 
