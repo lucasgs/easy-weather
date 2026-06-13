@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">Easy Weather</string>
+    <string name="weather_loading_title">Loading weather</string>
+    <string name="weather_loading_message">Fetching the latest forecast for your current location.</string>
+    <string name="weather_error_title">Couldn’t load the weather</string>
+    <string name="weather_error_network_message">Please check your connection and try again.</string>
+    <string name="weather_error_location_unavailable_message">We couldn’t determine your current location. Try again in a moment.</string>
+    <string name="weather_error_unknown_message">Something went wrong. Please try again.</string>
+    <string name="weather_retry_action">Retry</string>
+    <string name="weather_permission_title">Location access needed</string>
+    <string name="weather_permission_message">EasyWeather uses your location to fetch a local forecast. Grant location access to continue.</string>
+    <string name="weather_permission_action">Allow location</string>
+    <string name="weather_open_settings_action">Open app settings</string>
+    <string name="weather_location_disabled_title">Turn on location services</string>
+    <string name="weather_location_disabled_message">Location services are off, so EasyWeather can’t find your forecast.</string>
+    <string name="weather_location_settings_action">Open location settings</string>
+    <string name="weather_last_updated">Last updated: %1$s</string>
+    <string name="weather_wind_icon_description">Wind</string>
+    <string name="weather_temperature_icon_description">Temperature</string>
 </resources>

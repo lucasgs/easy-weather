@@ -7,11 +7,11 @@ import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherRepository
 import com.dendron.easyweather.domain.location.LocationProvider
+import com.dendron.easyweather.domain.location.LocationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,33 +21,68 @@ class WeatherListViewModel @Inject constructor(
     private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(WeatherListState())
+    private val _state = MutableStateFlow<WeatherScreenState>(WeatherScreenState.Empty)
     val state = _state.asStateFlow()
 
+    fun showPermissionRequired() {
+        _state.value = WeatherScreenState.PermissionRequired
+    }
+
     fun fetchData() {
+        val currentContent = _state.value as? WeatherScreenState.Content
+        _state.value = currentContent?.copy(isRefreshing = true) ?: WeatherScreenState.Loading
+
         viewModelScope.launch {
-            val currentLocation = locationProvider.getCurrentLocation()
-            currentLocation?.let { location ->
-                weatherRepository.getCurrentWeather(
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                ).onEach { result ->
-                    when (result) {
-                        is Resource.Success -> {
-                            val model = result.data.toUiModel()
-                            _state.value = WeatherListState(data = model)
+            when (val currentLocation = locationProvider.getCurrentLocation()) {
+                LocationResult.PermissionDenied -> {
+                    _state.value = WeatherScreenState.PermissionRequired
+                }
+
+                LocationResult.LocationDisabled -> {
+                    _state.value = WeatherScreenState.LocationDisabled
+                }
+
+                LocationResult.Unavailable -> {
+                    _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
+                }
+
+                is LocationResult.Success -> {
+                    weatherRepository.getCurrentWeather(
+                        latitude = currentLocation.data.latitude,
+                        longitude = currentLocation.data.longitude,
+                    ).collect { result ->
+                        when (result) {
+                            is Resource.Success -> {
+                                _state.value = WeatherScreenState.Content(
+                                    model = result.data.toUiModel(),
+                                    lastUpdatedAtMillis = System.currentTimeMillis(),
+                                )
+                            }
+
+                            is Resource.Error -> {
+                                _state.value = WeatherScreenState.Error(result.toErrorReason())
+                            }
+
+                            is Resource.Loading -> {
+                                _state.value = currentContent?.copy(isRefreshing = true)
+                                    ?: WeatherScreenState.Loading
+                            }
                         }
-                        is Resource.Error -> _state.value =
-                            WeatherListState(error = result.message.toString())
-                        is Resource.Loading -> _state.value = WeatherListState(isLoading = true)
                     }
-                }.launchIn(viewModelScope)
+                }
             }
         }
     }
 }
 
-private fun getWeatherDescription(weatherCode: Int) =
+private fun Resource.Error<Weather>.toErrorReason(): ErrorReason =
+    if (message.isNullOrBlank()) {
+        ErrorReason.Unknown
+    } else {
+        ErrorReason.Network
+    }
+
+private fun getWeatherDescription(weatherCode: Int): String =
     when (weatherCode) {
         0 -> "Clear sky"
         1, 2, 3 -> "Mainly clear, partly cloudy, and overcast"
@@ -77,7 +112,8 @@ private fun getWeatherImage(weatherCode: Int): Int =
         95, 96, 99 -> R.drawable.thunderstorm
         else -> R.drawable.na
     }
-private fun getWindDirection(angle: Int) =
+
+private fun getWindDirection(angle: Int): String =
     when (angle) {
         in 0..22 -> "N"
         in 22..67 -> "NE"
@@ -94,9 +130,8 @@ fun Weather.toUiModel(): WeatherUiModel {
     val windDirectionText = getWindDirection(windDirection)
     return WeatherUiModel(
         weatherIcon = getWeatherImage(weatherCode),
-//                    descriptionText = "It's warmer this afternoon than yesterday afternoon.",
         descriptionText = getWeatherDescription(weatherCode),
         windText = "$windSpeed ${weatherUnit.wind} $windDirectionText",
-        temperatureText = "${minTemperature}° / ${currentTemperature}° / ${maxTemperature}°"
+        temperatureText = "$minTemperature° / $currentTemperature° / $maxTemperature°",
     )
 }

@@ -16,15 +16,19 @@ import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.presentation.ui.theme.BlueLight
 
 @Composable
-fun CurrentWeatherItem(@DrawableRes iconId: Int, text: String) {
+fun CurrentWeatherItem(
+    @DrawableRes iconId: Int,
+    iconDescription: String,
+    text: String,
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(8.dp),
     ) {
         Image(
             painter = painterResource(id = iconId),
-            contentDescription = null,
+            contentDescription = iconDescription,
             colorFilter = ColorFilter.tint(BlueLight),
         )
         Text(text = text, color = Color.White)

@@ -2,16 +2,18 @@ package com.dendron.easyweather.presentation.home
 
 import app.cash.turbine.test
 import com.dendron.easyweather.MainDispatcherRule
+import com.dendron.easyweather.R
 import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherRepository
 import com.dendron.easyweather.domain.WeatherUnits
 import com.dendron.easyweather.domain.location.LocationData
 import com.dendron.easyweather.domain.location.LocationProvider
+import com.dendron.easyweather.domain.location.LocationResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,94 +37,106 @@ class WeatherListViewModelTest {
 
     private lateinit var viewModel: WeatherListViewModel
 
-
     @Before
     fun setUp() {
         viewModel = WeatherListViewModel(
             weatherRepository = weatherRepository,
-            locationProvider = locationProvider
+            locationProvider = locationProvider,
         )
     }
 
     @Test
-    fun `fetchData should emit success if there's a location and repository returns ok`() =
-        runTest {
+    fun `fetchData should emit loading then content when location and weather are available`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            LocationResult.Success(LocationData(LAT, LONG)),
+        )
 
-            val expectedWeather = fakeWeather
-            val expectedUiModel = fakeWeatherUiModel
-            val expectedSuccess = WeatherListState(data = expectedUiModel)
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
+            flow {
+                emit(Resource.Loading())
+                emit(Resource.Success(data = fakeWeather))
+            },
+        )
 
-            whenever(locationProvider.getCurrentLocation()).thenReturn(
-                LocationData(LAT, LONG)
-            )
-
-            whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
-                flow {
-                    emit(Resource.Success(data = expectedWeather))
-                }
-            )
-
-            viewModel.fetchData()
-            viewModel.state.test {
-                assertEquals(expectedSuccess, awaitItem())
-            }
-        }
-
-
-    @Test
-    fun `fetchData should emit error if there's a location and repository returns an error`() =
-        runTest {
-
-            val expectedErrorMessage = "Error"
-            val expectedError = WeatherListState(error = expectedErrorMessage)
-
-            whenever(locationProvider.getCurrentLocation()).thenReturn(
-                LocationData(LAT, LONG)
-            )
-
-            whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
-                flow {
-                    emit(Resource.Error(message = expectedErrorMessage))
-                }
-            )
-
-            viewModel.fetchData()
-            viewModel.state.test {
-                assertEquals(expectedError, awaitItem())
-            }
-        }
-
-    @Test
-    fun `fetchData should emit loading if there's a location and repository returns that is loading`() =
-        runTest {
-            val expectedLoading = WeatherListState(isLoading = true)
-
-            whenever(locationProvider.getCurrentLocation()).thenReturn(
-                LocationData(LAT, LONG)
-            )
-
-            whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
-                flow {
-                    emit(Resource.Loading())
-                }
-            )
-
-            viewModel.fetchData()
-            viewModel.state.test {
-                assertEquals(expectedLoading, awaitItem())
-            }
-        }
-
-    @Test
-    fun `fetchData should not emit anything if there's no location`() = runTest {
-
-        val expectedError = WeatherListState()
-
-        whenever(locationProvider.getCurrentLocation()).thenReturn(null)
-
-        viewModel.fetchData()
         viewModel.state.test {
-            assertEquals(expectedError, awaitItem())
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading, awaitItem())
+            val content = awaitItem() as WeatherScreenState.Content
+            assertEquals(fakeWeatherUiModel, content.model)
+        }
+    }
+
+    @Test
+    fun `fetchData should emit loading then error when repository fails`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            LocationResult.Success(LocationData(LAT, LONG)),
+        )
+
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
+            flow {
+                emit(Resource.Loading())
+                emit(Resource.Error(message = "Error"))
+            },
+        )
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(
+                WeatherScreenState.Error(ErrorReason.Network),
+                awaitItem(),
+            )
+        }
+    }
+
+    @Test
+    fun `fetchData should emit permission required when location permission is missing`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(LocationResult.PermissionDenied)
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.PermissionRequired, awaitItem())
+        }
+    }
+
+    @Test
+    fun `fetchData should emit location disabled when providers are off`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(LocationResult.LocationDisabled)
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.LocationDisabled, awaitItem())
+        }
+    }
+
+    @Test
+    fun `fetchData should emit location unavailable error when no location is returned`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(LocationResult.Unavailable)
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(
+                WeatherScreenState.Error(ErrorReason.LocationUnavailable),
+                awaitItem(),
+            )
         }
     }
 
@@ -140,13 +154,13 @@ class WeatherListViewModelTest {
             descriptionText = "Mainly clear, partly cloudy, and overcast",
             windText = "50.0 km/h SE",
             temperatureText = "2.0° / 10.0° / 1.0°",
-            weatherIcon = 2131165314,
+            weatherIcon = R.drawable.cloudy,
         )
 
         val fakeWeather = Weather(
             weatherUnit = WeatherUnits(
                 temperature = "",
-                wind = "km/h"
+                wind = "km/h",
             ),
             currentTemperature = 10.0,
             maxTemperature = 1.0,
