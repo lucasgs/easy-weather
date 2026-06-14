@@ -2,7 +2,6 @@ package com.dendron.easyweather.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dendron.easyweather.R
 import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherRepository
@@ -19,6 +18,7 @@ import javax.inject.Inject
 class WeatherListViewModel @Inject constructor(
     private val weatherRepository: WeatherRepository,
     private val locationProvider: LocationProvider,
+    private val weatherUiModelMapper: WeatherUiModelMapper,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<WeatherScreenState>(WeatherScreenState.Empty)
@@ -54,7 +54,7 @@ class WeatherListViewModel @Inject constructor(
                         when (result) {
                             is Resource.Success -> {
                                 _state.value = WeatherScreenState.Content(
-                                    model = result.data.toUiModel(),
+                                    model = weatherUiModelMapper.map(result.data),
                                     lastUpdatedAtMillis = System.currentTimeMillis(),
                                 )
                             }
@@ -81,57 +81,3 @@ private fun Resource.Error<Weather>.toErrorReason(): ErrorReason =
     } else {
         ErrorReason.Network
     }
-
-private fun getWeatherDescription(weatherCode: Int): String =
-    when (weatherCode) {
-        0 -> "Clear sky"
-        1, 2, 3 -> "Mainly clear, partly cloudy, and overcast"
-        45, 48 -> "Fog and depositing rime fog"
-        51, 53, 55 -> "Drizzle: Light, moderate, and dense intensity"
-        56, 57 -> "Freezing Drizzle: Light and dense intensity"
-        61, 63, 65 -> "Rain: Slight, moderate and heavy intensity"
-        66, 67 -> "Freezing Rain: Light and heavy intensity"
-        71, 73, 75 -> "Snow fall: Slight, moderate, and heavy intensity"
-        77 -> "Snow grains"
-        80, 81, 82 -> "Rain showers: Slight, moderate, and violent"
-        85, 86 -> "Snow showers slight and heavy"
-        95 -> "Thunderstorm: Slight or moderate"
-        96, 99 -> "Thunderstorm with slight and heavy hail"
-        else -> "Nothing to say :("
-    }
-
-private fun getWeatherImage(weatherCode: Int): Int =
-    when (weatherCode) {
-        0 -> R.drawable.day_sunny
-        1, 2, 3 -> R.drawable.cloudy
-        45, 48 -> R.drawable.fog
-        51, 53, 55, 56, 57 -> R.drawable.drizzle
-        61, 63, 65, 66, 67 -> R.drawable.rain
-        71, 73, 75, 77 -> R.drawable.snow
-        80, 81, 82, 85, 86 -> R.drawable.showers
-        95, 96, 99 -> R.drawable.thunderstorm
-        else -> R.drawable.na
-    }
-
-private fun getWindDirection(angle: Int): String =
-    when (angle) {
-        in 0..22 -> "N"
-        in 22..67 -> "NE"
-        in 67..112 -> "E"
-        in 112..157 -> "SE"
-        in 157..202 -> "S"
-        in 202..247 -> "SW"
-        in 247..292 -> "W"
-        in 292..337 -> "NW"
-        else -> "No direction"
-    }
-
-fun Weather.toUiModel(): WeatherUiModel {
-    val windDirectionText = getWindDirection(windDirection)
-    return WeatherUiModel(
-        weatherIcon = getWeatherImage(weatherCode),
-        descriptionText = getWeatherDescription(weatherCode),
-        windText = "$windSpeed ${weatherUnit.wind} $windDirectionText",
-        temperatureText = "$minTemperature° / $currentTemperature° / $maxTemperature°",
-    )
-}

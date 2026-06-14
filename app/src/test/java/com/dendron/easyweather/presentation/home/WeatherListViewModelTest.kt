@@ -36,12 +36,19 @@ class WeatherListViewModelTest {
     private lateinit var locationProvider: LocationProvider
 
     private lateinit var viewModel: WeatherListViewModel
+    private lateinit var weatherUiModelMapper: WeatherUiModelMapper
 
     @Before
     fun setUp() {
+        weatherUiModelMapper = WeatherUiModelMapper(
+            weatherDescriptionMapper = WeatherDescriptionMapper(),
+            weatherIconMapper = WeatherIconMapper(),
+            windDirectionMapper = WindDirectionMapper(),
+        )
         viewModel = WeatherListViewModel(
             weatherRepository = weatherRepository,
             locationProvider = locationProvider,
+            weatherUiModelMapper = weatherUiModelMapper,
         )
     }
 
@@ -138,12 +145,6 @@ class WeatherListViewModelTest {
                 awaitItem(),
             )
         }
-    }
-
-    @Test
-    fun `toUiModel should return a valid UiModel if Weather is valid`() {
-        val actualUiModel = fakeWeather.toUiModel()
-        assertEquals(fakeWeatherUiModel, actualUiModel)
     }
 
     companion object {
