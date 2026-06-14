@@ -56,6 +56,28 @@ fun HomeScreen(
         }
     }
 
+    HomeScreenContent(
+        state = state,
+        onRefresh = viewModel::fetchData,
+        onRequestPermission = {
+            permissionLauncher.launch(locationPermissions)
+        },
+        onOpenAppSettings = context::openAppSettings,
+        onOpenLocationSettings = context::openLocationSettings,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+internal fun HomeScreenContent(
+    state: WeatherScreenState,
+    onRefresh: () -> Unit,
+    onRequestPermission: () -> Unit,
+    onOpenAppSettings: () -> Unit,
+    onOpenLocationSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     when (val currentState = state) {
         WeatherScreenState.Empty,
         WeatherScreenState.Loading,
@@ -69,7 +91,7 @@ fun HomeScreen(
             model = currentState.model,
             lastUpdatedAtMillis = currentState.lastUpdatedAtMillis,
             isRefreshing = currentState.isRefreshing,
-            onRefresh = viewModel::fetchData,
+            onRefresh = onRefresh,
             modifier = modifier,
         )
 
@@ -77,7 +99,7 @@ fun HomeScreen(
             title = stringResource(R.string.weather_error_title),
             message = stringResource(currentState.reason.messageResId),
             primaryActionLabel = stringResource(R.string.weather_retry_action),
-            onPrimaryAction = viewModel::fetchData,
+            onPrimaryAction = onRefresh,
             modifier = modifier,
         )
 
@@ -85,13 +107,9 @@ fun HomeScreen(
             title = stringResource(R.string.weather_permission_title),
             message = stringResource(R.string.weather_permission_message),
             primaryActionLabel = stringResource(R.string.weather_permission_action),
-            onPrimaryAction = {
-                permissionLauncher.launch(locationPermissions)
-            },
+            onPrimaryAction = onRequestPermission,
             secondaryActionLabel = stringResource(R.string.weather_open_settings_action),
-            onSecondaryAction = {
-                context.openAppSettings()
-            },
+            onSecondaryAction = onOpenAppSettings,
             modifier = modifier,
         )
 
@@ -99,11 +117,9 @@ fun HomeScreen(
             title = stringResource(R.string.weather_location_disabled_title),
             message = stringResource(R.string.weather_location_disabled_message),
             primaryActionLabel = stringResource(R.string.weather_location_settings_action),
-            onPrimaryAction = {
-                context.openLocationSettings()
-            },
+            onPrimaryAction = onOpenLocationSettings,
             secondaryActionLabel = stringResource(R.string.weather_retry_action),
-            onSecondaryAction = viewModel::fetchData,
+            onSecondaryAction = onRefresh,
             modifier = modifier,
         )
     }
