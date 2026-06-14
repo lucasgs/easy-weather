@@ -24,6 +24,10 @@ class WeatherListViewModel @Inject constructor(
     private val _state = MutableStateFlow<WeatherScreenState>(WeatherScreenState.Empty)
     val state = _state.asStateFlow()
 
+    fun showEmptyState() {
+        _state.value = WeatherScreenState.Empty
+    }
+
     fun showPermissionRequired() {
         _state.value = WeatherScreenState.PermissionRequired
     }

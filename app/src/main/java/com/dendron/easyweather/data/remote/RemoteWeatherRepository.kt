@@ -12,15 +12,15 @@ import javax.inject.Inject
 
 class RemoteWeatherRepository @Inject constructor(private val api: WeatherApi) : WeatherRepository {
 
-    override suspend fun getCurrentWeather(
+    override fun getCurrentWeather(
         latitude: Double,
-        longitude: Double
+        longitude: Double,
     ): Flow<Resource<Weather>> = flow {
         try {
             emit(Resource.Loading())
             val result = api.getCurrentWeather(
                 latitude = latitude,
-                longitude = longitude
+                longitude = longitude,
             ).toDomain()
             emit(Resource.Success(result))
 

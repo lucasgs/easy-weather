@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Easy Weather</string>
+    <string name="weather_empty_title">Ready to check the weather</string>
+    <string name="weather_empty_message">Use your location to fetch the latest local forecast.</string>
+    <string name="weather_get_started_action">Use my location</string>
     <string name="weather_loading_title">Loading weather</string>
     <string name="weather_loading_message">Fetching the latest forecast for your current location.</string>
     <string name="weather_error_title">Couldn’t load the weather</string>

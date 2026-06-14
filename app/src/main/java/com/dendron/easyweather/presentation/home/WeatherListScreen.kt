@@ -52,7 +52,7 @@ fun HomeScreen(
         if (context.hasLocationPermissions()) {
             viewModel.fetchData()
         } else {
-            viewModel.showPermissionRequired()
+            viewModel.showEmptyState()
         }
     }
 
@@ -79,9 +79,15 @@ internal fun HomeScreenContent(
     modifier: Modifier = Modifier,
 ) {
     when (val currentState = state) {
-        WeatherScreenState.Empty,
-        WeatherScreenState.Loading,
-        -> WeatherStatusPanel(
+        WeatherScreenState.Empty -> WeatherStatusPanel(
+            title = stringResource(R.string.weather_empty_title),
+            message = stringResource(R.string.weather_empty_message),
+            primaryActionLabel = stringResource(R.string.weather_get_started_action),
+            onPrimaryAction = onRequestPermission,
+            modifier = modifier,
+        )
+
+        WeatherScreenState.Loading -> WeatherStatusPanel(
             title = stringResource(R.string.weather_loading_title),
             message = stringResource(R.string.weather_loading_message),
             modifier = modifier,

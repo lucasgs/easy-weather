@@ -18,6 +18,24 @@ class HomeScreenContentTest {
     val composeTestRule = createComposeRule()
 
     @Test
+    fun emptyState_showsGetStartedCopy() {
+        var permissionRequests = 0
+
+        setContent(
+            state = WeatherScreenState.Empty,
+            onRequestPermission = { permissionRequests += 1 },
+        )
+
+        composeTestRule.onNodeWithText("Ready to check the weather").assertIsDisplayed()
+        composeTestRule.onNodeWithText(
+            "Use your location to fetch the latest local forecast.",
+        ).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Use my location").performClick()
+
+        assertEquals(1, permissionRequests)
+    }
+
+    @Test
     fun loadingState_showsLoadingCopy() {
         setContent(WeatherScreenState.Loading)
 
