@@ -34,8 +34,32 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithText("Quick refresh whenever the weather changes").assertIsDisplayed()
         composeTestRule.onNodeWithText("No account setup required").assertIsDisplayed()
         composeTestRule.onNodeWithText("Use my location").performClick()
+        composeTestRule.onNodeWithText("Choose a city instead").assertIsDisplayed()
 
         assertEquals(1, permissionRequests)
+    }
+
+    @Test
+    fun manualLocationState_showsSearchUi() {
+        var searched = 0
+        var back = 0
+
+        setContent(
+            state = WeatherScreenState.ManualLocation(
+                query = "New York",
+                results = emptyList(),
+            ),
+            onManualLocationSearch = { searched += 1 },
+            onManualLocationBack = { back += 1 },
+        )
+
+        composeTestRule.onNodeWithText("Search for a city").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Skip location access and check the weather for any city.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Search").performClick()
+        composeTestRule.onNodeWithText("Back").performClick()
+
+        assertEquals(1, searched)
+        assertEquals(1, back)
     }
 
     @Test
@@ -133,6 +157,11 @@ class HomeScreenContentTest {
         state: WeatherScreenState,
         onRefresh: () -> Unit = {},
         onRequestPermission: () -> Unit = {},
+        onShowManualLocation: () -> Unit = {},
+        onManualLocationQueryChange: (String) -> Unit = {},
+        onManualLocationSearch: () -> Unit = {},
+        onManualLocationSelect: (com.dendron.easyweather.domain.location.SearchedLocation) -> Unit = {},
+        onManualLocationBack: () -> Unit = {},
         onOpenAppSettings: () -> Unit = {},
         onOpenLocationSettings: () -> Unit = {},
     ) {
@@ -142,6 +171,11 @@ class HomeScreenContentTest {
                     state = state,
                     onRefresh = onRefresh,
                     onRequestPermission = onRequestPermission,
+                    onShowManualLocation = onShowManualLocation,
+                    onManualLocationQueryChange = onManualLocationQueryChange,
+                    onManualLocationSearch = onManualLocationSearch,
+                    onManualLocationSelect = onManualLocationSelect,
+                    onManualLocationBack = onManualLocationBack,
                     onOpenAppSettings = onOpenAppSettings,
                     onOpenLocationSettings = onOpenLocationSettings,
                 )

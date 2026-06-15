@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import com.dendron.easyweather.presentation.ui.theme.WhiteLight
 @Composable
 fun FirstRunPanel(
     onPrimaryAction: () -> Unit,
+    onSecondaryAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -67,6 +69,10 @@ fun FirstRunPanel(
             Spacer(modifier = Modifier.height(28.dp))
             Button(onClick = onPrimaryAction) {
                 Text(text = stringResource(R.string.weather_get_started_action))
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(onClick = onSecondaryAction) {
+                Text(text = stringResource(R.string.weather_choose_city_action))
             }
         }
     }

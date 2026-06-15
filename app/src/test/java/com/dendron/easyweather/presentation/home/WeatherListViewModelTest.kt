@@ -10,6 +10,7 @@ import com.dendron.easyweather.domain.WeatherUnits
 import com.dendron.easyweather.domain.location.LocationData
 import com.dendron.easyweather.domain.location.LocationProvider
 import com.dendron.easyweather.domain.location.LocationResult
+import com.dendron.easyweather.domain.location.LocationSearchRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
@@ -35,6 +36,9 @@ class WeatherListViewModelTest {
     @Mock
     private lateinit var locationProvider: LocationProvider
 
+    @Mock
+    private lateinit var locationSearchRepository: LocationSearchRepository
+
     private lateinit var viewModel: WeatherListViewModel
     private lateinit var weatherUiModelMapper: WeatherUiModelMapper
 
@@ -48,6 +52,7 @@ class WeatherListViewModelTest {
         viewModel = WeatherListViewModel(
             weatherRepository = weatherRepository,
             locationProvider = locationProvider,
+            locationSearchRepository = locationSearchRepository,
             weatherUiModelMapper = weatherUiModelMapper,
         )
     }

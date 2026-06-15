@@ -3,10 +3,13 @@ package com.dendron.easyweather.di
 import android.app.Application
 import android.content.Context
 import com.dendron.easyweather.data.location.DefaultLocationProvider
+import com.dendron.easyweather.data.remote.LocationSearchApi
+import com.dendron.easyweather.data.remote.RemoteLocationSearchRepository
 import com.dendron.easyweather.data.remote.RemoteWeatherRepository
 import com.dendron.easyweather.data.remote.WeatherApi
 import com.dendron.easyweather.domain.WeatherRepository
 import com.dendron.easyweather.domain.location.LocationProvider
+import com.dendron.easyweather.domain.location.LocationSearchRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dagger.Module
@@ -43,6 +46,19 @@ object AppModule {
         return RemoteWeatherRepository(api)
     }
 
+    @Provides
+    @Singleton
+    fun provideLocationSearchApi(): LocationSearchApi = Retrofit.Builder()
+        .baseUrl("https://geocoding-api.open-meteo.com/v1/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(LocationSearchApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideLocationSearchRepository(api: LocationSearchApi): LocationSearchRepository {
+        return RemoteLocationSearchRepository(api)
+    }
 
     @Provides
     @Singleton
@@ -54,7 +70,7 @@ object AppModule {
     @Singleton
     fun provideLocationProvider(
         appContext: Application,
-        locationClient: FusedLocationProviderClient
+        locationClient: FusedLocationProviderClient,
     ): LocationProvider {
         return DefaultLocationProvider(
             locationClient = locationClient,

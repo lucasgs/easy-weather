@@ -30,6 +30,7 @@ import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherConditions
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherImageAndDescription
 import com.dendron.easyweather.presentation.home.components.FirstRunPanel
+import com.dendron.easyweather.presentation.home.components.ManualLocationPanel
 import com.dendron.easyweather.presentation.home.components.WeatherStatusPanel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -64,6 +65,11 @@ fun HomeScreen(
         onRequestPermission = {
             permissionLauncher.launch(locationPermissions)
         },
+        onShowManualLocation = viewModel::showManualLocation,
+        onManualLocationQueryChange = viewModel::updateManualLocationQuery,
+        onManualLocationSearch = viewModel::searchManualLocations,
+        onManualLocationSelect = viewModel::selectManualLocation,
+        onManualLocationBack = viewModel::showEmptyState,
         onOpenAppSettings = context::openAppSettings,
         onOpenLocationSettings = context::openLocationSettings,
         modifier = modifier,
@@ -76,6 +82,11 @@ internal fun HomeScreenContent(
     state: WeatherScreenState,
     onRefresh: () -> Unit,
     onRequestPermission: () -> Unit,
+    onShowManualLocation: () -> Unit,
+    onManualLocationQueryChange: (String) -> Unit,
+    onManualLocationSearch: () -> Unit,
+    onManualLocationSelect: (com.dendron.easyweather.domain.location.SearchedLocation) -> Unit,
+    onManualLocationBack: () -> Unit,
     onOpenAppSettings: () -> Unit,
     onOpenLocationSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -83,6 +94,19 @@ internal fun HomeScreenContent(
     when (val currentState = state) {
         WeatherScreenState.Empty -> FirstRunPanel(
             onPrimaryAction = onRequestPermission,
+            onSecondaryAction = onShowManualLocation,
+            modifier = modifier,
+        )
+
+        is WeatherScreenState.ManualLocation -> ManualLocationPanel(
+            query = currentState.query,
+            isSearching = currentState.isSearching,
+            results = currentState.results,
+            errorMessage = currentState.errorMessage,
+            onQueryChange = onManualLocationQueryChange,
+            onSearch = onManualLocationSearch,
+            onSelect = onManualLocationSelect,
+            onBack = onManualLocationBack,
             modifier = modifier,
         )
 

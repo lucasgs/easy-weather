@@ -3,6 +3,7 @@
     <string name="weather_empty_title">Get a local forecast in seconds</string>
     <string name="weather_empty_message">EasyWeather uses your location once to show the weather where you are right now.</string>
     <string name="weather_get_started_action">Use my location</string>
+    <string name="weather_choose_city_action">Choose a city instead</string>
     <string name="weather_empty_benefit_current">Current conditions for your area</string>
     <string name="weather_empty_benefit_refresh">Quick refresh whenever the weather changes</string>
     <string name="weather_empty_benefit_privacy">No account setup required</string>
@@ -27,4 +28,9 @@
     <string name="weather_temperature_range_label">Temperature range</string>
     <string name="weather_wind_icon_description">Wind</string>
     <string name="weather_temperature_icon_description">Temperature</string>
+    <string name="weather_manual_title">Search for a city</string>
+    <string name="weather_manual_message">Skip location access and check the weather for any city.</string>
+    <string name="weather_manual_search_label">City name</string>
+    <string name="weather_manual_search_action">Search</string>
+    <string name="weather_manual_back_action">Back</string>
 </resources>
