@@ -28,6 +28,10 @@ class WeatherUiModelMapperTest {
                 highLowText = "H:1.0°  L:2.0°",
                 windText = "50.0 km/h SE",
                 temperatureText = "2.0° / 10.0° / 1.0°",
+                humidityText = "65%",
+                precipitationText = "40%",
+                sunriseText = "6:30 am",
+                sunsetText = "8:15 pm",
                 hourlyForecast = listOf(
                     HourlyForecastUiModel(timeText = "1pm", temperatureText = "11.0°"),
                     HourlyForecastUiModel(timeText = "2pm", temperatureText = "12.5°"),
@@ -55,6 +59,10 @@ class WeatherUiModelMapperTest {
             windSpeed = 50.0,
             windDirection = 120,
             weatherCode = 1,
+            humidityPercent = 65,
+            precipitationChancePercent = 40,
+            sunrise = "2026-06-14T06:30",
+            sunset = "2026-06-14T20:15",
             hourlyForecast = listOf(
                 HourlyForecast(time = "2026-06-14T13:00", temperature = 11.0),
                 HourlyForecast(time = "2026-06-14T14:00", temperature = 12.5),

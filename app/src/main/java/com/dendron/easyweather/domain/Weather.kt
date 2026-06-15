@@ -9,6 +9,10 @@ data class Weather(
     val windSpeed: Double,
     val windDirection: Int,
     val weatherCode: Int,
+    val humidityPercent: Int,
+    val precipitationChancePercent: Int,
+    val sunrise: String,
+    val sunset: String,
     val hourlyForecast: List<HourlyForecast>,
     val dailyForecast: List<DailyForecast>,
 )

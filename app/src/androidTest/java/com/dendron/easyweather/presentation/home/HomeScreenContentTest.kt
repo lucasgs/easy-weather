@@ -137,6 +137,10 @@ class HomeScreenContentTest {
                     highLowText = "H:22°  L:12°",
                     windText = "10 km/h N",
                     temperatureText = "12° / 18° / 22°",
+                    humidityText = "65%",
+                    precipitationText = "40%",
+                    sunriseText = "6:30 am",
+                    sunsetText = "8:15 pm",
                     hourlyForecast = listOf(
                         HourlyForecastUiModel(timeText = "1pm", temperatureText = "18°"),
                         HourlyForecastUiModel(timeText = "2pm", temperatureText = "19°"),
@@ -158,6 +162,10 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithText("H:22°  L:12°").assertIsDisplayed()
         composeTestRule.onNodeWithText("10 km/h N").assertIsDisplayed()
         composeTestRule.onNodeWithText("12° / 18° / 22°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("65%").assertIsDisplayed()
+        composeTestRule.onNodeWithText("40%").assertIsDisplayed()
+        composeTestRule.onNodeWithText("6:30 am").assertIsDisplayed()
+        composeTestRule.onNodeWithText("8:15 pm").assertIsDisplayed()
         composeTestRule.onNodeWithText("Hourly forecast").assertIsDisplayed()
         composeTestRule.onNodeWithText("1pm").assertIsDisplayed()
         composeTestRule.onNodeWithText("19°").assertIsDisplayed()

@@ -127,7 +127,7 @@ class RemoteWeatherRepositoryTest {
     private fun getFakeWeatherDto() = WeatherDto(
         currentWeather = CurrentWeather(
             temperature = 1.0,
-            time = "",
+            time = "2026-06-14T13:00",
             weathercode = 1,
             winddirection = 1,
             windspeed = 1.0,
@@ -135,23 +135,31 @@ class RemoteWeatherRepositoryTest {
         daily = Daily(
             temperature2mMax = listOf(1.0),
             temperature2mMin = listOf(2.0),
-            time = emptyList(),
-            windspeed10mMax = emptyList()
+            sunrise = listOf("2026-06-14T06:30"),
+            sunset = listOf("2026-06-14T20:15"),
+            time = listOf("2026-06-14"),
+            windspeed10mMax = emptyList(),
         ),
         dailyUnits = DailyUnits(
             temperature2mMax = "",
             temperature2mMin = "",
+            sunrise = "",
+            sunset = "",
             time = "",
             windspeed10mMax = "",
         ),
         elevation = 0,
         generationtimeMs = 1.0,
         hourly = Hourly(
-            temperature2m = emptyList(),
-            time = emptyList(),
+            temperature2m = listOf(11.0),
+            relativeHumidity2m = listOf(65),
+            precipitationProbability = listOf(40),
+            time = listOf("2026-06-14T13:00"),
         ),
         hourlyUnits = HourlyUnits(
             temperature2m = "",
+            relativeHumidity2m = "",
+            precipitationProbability = "",
             time = "",
         ),
         latitude = lat,

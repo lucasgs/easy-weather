@@ -18,6 +18,10 @@ class WeatherUiModelMapper @Inject constructor(
             highLowText = "H:${weather.maxTemperature}°  L:${weather.minTemperature}°",
             windText = "${weather.windSpeed} ${weather.weatherUnit.wind} $windDirectionText",
             temperatureText = "${weather.minTemperature}° / ${weather.currentTemperature}° / ${weather.maxTemperature}°",
+            humidityText = "${weather.humidityPercent}%",
+            precipitationText = "${weather.precipitationChancePercent}%",
+            sunriseText = weather.sunrise.toDisplayTime(),
+            sunsetText = weather.sunset.toDisplayTime(),
             hourlyForecast = weather.hourlyForecast.map { it.toUiModel() },
             dailyForecast = weather.dailyForecast.map { it.toUiModel() },
         )

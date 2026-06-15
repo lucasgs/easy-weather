@@ -54,5 +54,49 @@ fun CurrentWeatherConditions(
                 modifier = Modifier.weight(1f),
             )
         }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .padding(top = 12.dp),
+        ) {
+            CurrentWeatherItem(
+                title = stringResource(R.string.weather_humidity_label),
+                iconId = R.drawable.thermometer,
+                iconDescription = stringResource(R.string.weather_temperature_icon_description),
+                text = model.humidityText,
+                modifier = Modifier.weight(1f),
+            )
+            CurrentWeatherItem(
+                title = stringResource(R.string.weather_precipitation_label),
+                iconId = R.drawable.rain,
+                iconDescription = stringResource(R.string.weather_temperature_icon_description),
+                text = model.precipitationText,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .padding(top = 12.dp),
+        ) {
+            CurrentWeatherItem(
+                title = stringResource(R.string.weather_sunrise_label),
+                iconId = R.drawable.day_sunny,
+                iconDescription = stringResource(R.string.weather_temperature_icon_description),
+                text = model.sunriseText,
+                modifier = Modifier.weight(1f),
+            )
+            CurrentWeatherItem(
+                title = stringResource(R.string.weather_sunset_label),
+                iconId = R.drawable.day_sunny,
+                iconDescription = stringResource(R.string.weather_temperature_icon_description),
+                text = model.sunsetText,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
