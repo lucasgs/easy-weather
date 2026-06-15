@@ -7,5 +7,6 @@ data class WeatherUiModel(
     val highLowText: String,
     val windText: String,
     val temperatureText: String,
+    val hourlyForecast: List<HourlyForecastUiModel>,
     val weatherIcon: Int,
 )

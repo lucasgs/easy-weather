@@ -137,6 +137,10 @@ class HomeScreenContentTest {
                     highLowText = "H:22°  L:12°",
                     windText = "10 km/h N",
                     temperatureText = "12° / 18° / 22°",
+                    hourlyForecast = listOf(
+                        HourlyForecastUiModel(timeText = "1pm", temperatureText = "18°"),
+                        HourlyForecastUiModel(timeText = "2pm", temperatureText = "19°"),
+                    ),
                     weatherIcon = com.dendron.easyweather.R.drawable.day_sunny,
                 ),
                 lastUpdatedAtMillis = 1_718_000_000_000,
@@ -150,6 +154,9 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithText("H:22°  L:12°").assertIsDisplayed()
         composeTestRule.onNodeWithText("10 km/h N").assertIsDisplayed()
         composeTestRule.onNodeWithText("12° / 18° / 22°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Hourly forecast").assertIsDisplayed()
+        composeTestRule.onNodeWithText("1pm").assertIsDisplayed()
+        composeTestRule.onNodeWithText("19°").assertIsDisplayed()
         composeTestRule.onNodeWithText("Last updated:", substring = true).assertIsDisplayed()
     }
 

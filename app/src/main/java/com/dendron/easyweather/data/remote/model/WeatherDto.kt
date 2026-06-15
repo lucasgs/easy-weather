@@ -1,6 +1,7 @@
 package com.dendron.easyweather.data.remote.model
 
 
+import com.dendron.easyweather.domain.HourlyForecast
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherUnits
 import com.google.gson.annotations.SerializedName
@@ -40,6 +41,14 @@ fun WeatherDto.toDomain() = Weather(
     windSpeed = currentWeather.windspeed,
     windDirection = currentWeather.winddirection,
     weatherCode = currentWeather.weathercode,
+    hourlyForecast = hourly.time.zip(hourly.temperature2m)
+        .take(8)
+        .map { (time, temperature) ->
+            HourlyForecast(
+                time = time,
+                temperature = temperature,
+            )
+        },
     weatherUnit = WeatherUnits(
         temperature = dailyUnits.temperature2mMax,
         wind = dailyUnits.windspeed10mMax,

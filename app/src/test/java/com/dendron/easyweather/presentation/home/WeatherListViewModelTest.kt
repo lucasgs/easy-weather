@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.dendron.easyweather.MainDispatcherRule
 import com.dendron.easyweather.R
 import com.dendron.easyweather.common.Resource
+import com.dendron.easyweather.domain.HourlyForecast
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherRepository
 import com.dendron.easyweather.domain.WeatherUnits
@@ -163,6 +164,9 @@ class WeatherListViewModelTest {
             highLowText = "H:1.0°  L:2.0°",
             windText = "50.0 km/h SE",
             temperatureText = "2.0° / 10.0° / 1.0°",
+            hourlyForecast = listOf(
+                HourlyForecastUiModel(timeText = "1pm", temperatureText = "11.0°"),
+            ),
             weatherIcon = R.drawable.cloudy,
         )
 
@@ -178,6 +182,9 @@ class WeatherListViewModelTest {
             windSpeed = 50.0,
             windDirection = 120,
             weatherCode = 1,
+            hourlyForecast = listOf(
+                HourlyForecast(time = "2026-06-14T13:00", temperature = 11.0),
+            ),
         )
     }
 }

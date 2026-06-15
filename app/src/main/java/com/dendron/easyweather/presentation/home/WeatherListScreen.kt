@@ -30,6 +30,7 @@ import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherConditions
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherImageAndDescription
 import com.dendron.easyweather.presentation.home.components.FirstRunPanel
+import com.dendron.easyweather.presentation.home.components.HourlyForecastSection
 import com.dendron.easyweather.presentation.home.components.ManualLocationPanel
 import com.dendron.easyweather.presentation.home.components.WeatherStatusPanel
 
@@ -181,6 +182,11 @@ private fun WeatherContent(
             }
             item {
                 CurrentWeatherConditions(model = model)
+            }
+            if (model.hourlyForecast.isNotEmpty()) {
+                item {
+                    HourlyForecastSection(items = model.hourlyForecast)
+                }
             }
         }
         PullRefreshIndicator(
