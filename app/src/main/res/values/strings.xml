@@ -18,6 +18,10 @@
     <string name="weather_location_disabled_message">Location services are off, so EasyWeather can’t find your forecast.</string>
     <string name="weather_location_settings_action">Open location settings</string>
     <string name="weather_last_updated">Last updated: %1$s</string>
+    <string name="weather_today_title">Today</string>
+    <string name="weather_condition_title">Current conditions</string>
+    <string name="weather_wind_label">Wind</string>
+    <string name="weather_temperature_range_label">Temperature range</string>
     <string name="weather_wind_icon_description">Wind</string>
     <string name="weather_temperature_icon_description">Temperature</string>
 </resources>

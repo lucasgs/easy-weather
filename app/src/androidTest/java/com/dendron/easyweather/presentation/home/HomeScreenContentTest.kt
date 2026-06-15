@@ -105,6 +105,8 @@ class HomeScreenContentTest {
             state = WeatherScreenState.Content(
                 model = WeatherUiModel(
                     descriptionText = "Clear sky",
+                    currentTemperatureText = "18°",
+                    highLowText = "H:22°  L:12°",
                     windText = "10 km/h N",
                     temperatureText = "12° / 18° / 22°",
                     weatherIcon = com.dendron.easyweather.R.drawable.day_sunny,
@@ -113,7 +115,10 @@ class HomeScreenContentTest {
             ),
         )
 
+        composeTestRule.onNodeWithText("Today").assertIsDisplayed()
+        composeTestRule.onNodeWithText("18°").assertIsDisplayed()
         composeTestRule.onNodeWithText("Clear sky").assertIsDisplayed()
+        composeTestRule.onNodeWithText("H:22°  L:12°").assertIsDisplayed()
         composeTestRule.onNodeWithText("10 km/h N").assertIsDisplayed()
         composeTestRule.onNodeWithText("12° / 18° / 22°").assertIsDisplayed()
         composeTestRule.onNodeWithText("Last updated:", substring = true).assertIsDisplayed()

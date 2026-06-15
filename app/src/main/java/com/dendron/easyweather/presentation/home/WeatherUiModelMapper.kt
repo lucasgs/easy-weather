@@ -13,6 +13,8 @@ class WeatherUiModelMapper @Inject constructor(
         return WeatherUiModel(
             weatherIcon = weatherIconMapper.map(weather.weatherCode),
             descriptionText = weatherDescriptionMapper.map(weather.weatherCode),
+            currentTemperatureText = "${weather.currentTemperature}°",
+            highLowText = "H:${weather.maxTemperature}°  L:${weather.minTemperature}°",
             windText = "${weather.windSpeed} ${weather.weatherUnit.wind} $windDirectionText",
             temperatureText = "${weather.minTemperature}° / ${weather.currentTemperature}° / ${weather.maxTemperature}°",
         )

@@ -21,6 +21,8 @@ class WeatherUiModelMapperTest {
         assertEquals(
             WeatherUiModel(
                 descriptionText = "Mainly clear, partly cloudy, and overcast",
+                currentTemperatureText = "10.0°",
+                highLowText = "H:1.0°  L:2.0°",
                 windText = "50.0 km/h SE",
                 temperatureText = "2.0° / 10.0° / 1.0°",
                 weatherIcon = R.drawable.cloudy,
