@@ -1,10 +1,14 @@
 # EasyWeather
 
-EasyWeather is a simple Android weather app built with Kotlin and Jetpack Compose.
-It uses the device location to fetch the current forecast from the Open-Meteo API and displays key weather details in a lightweight UI.
+EasyWeather is an Android weather app built with Kotlin and Jetpack Compose.
+It can fetch weather for the device location or a manually searched city, and presents current, hourly, and multi-day forecast details in a lightweight UI.
 
 ## Features
-- Current weather based on device location
+- Current weather for the device location
+- Manual city search fallback when location is unavailable
+- Hourly forecast
+- Multi-day forecast
+- Weather details including humidity, precipitation chance, sunrise, and sunset
 - Pull-to-refresh
 - Jetpack Compose UI
 - Hilt dependency injection
@@ -45,7 +49,7 @@ It uses the device location to fetch the current forecast from the Open-Meteo AP
 4. Grant location permission when prompted.
 
 ## Notes
-- The app currently relies on location permission and does not yet provide a manual city-search fallback.
+- The app supports both location-based weather and manual city search.
 - Internet access is required to fetch weather data.
 
 ## Roadmap
