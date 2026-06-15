@@ -33,6 +33,7 @@ data class WeatherDto(
 )
 
 fun WeatherDto.toDomain() = Weather(
+    locationName = timezone.substringAfterLast('/').replace('_', ' '),
     currentTemperature = currentWeather.temperature,
     maxTemperature = daily.temperature2mMax.max(),
     minTemperature = daily.temperature2mMin.min(),
@@ -41,6 +42,6 @@ fun WeatherDto.toDomain() = Weather(
     weatherCode = currentWeather.weathercode,
     weatherUnit = WeatherUnits(
         temperature = dailyUnits.temperature2mMax,
-        wind = dailyUnits.windspeed10mMax
-    )
+        wind = dailyUnits.windspeed10mMax,
+    ),
 )

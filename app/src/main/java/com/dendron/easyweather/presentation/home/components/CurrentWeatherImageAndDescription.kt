@@ -51,9 +51,15 @@ fun CurrentWeatherImageAndDescription(
             modifier = Modifier.padding(24.dp),
         ) {
             Text(
-                text = stringResource(R.string.weather_today_title),
+                text = model.locationName,
                 color = WhiteDark,
                 style = MaterialTheme.typography.overline,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.weather_today_title),
+                color = WhiteDark,
+                style = MaterialTheme.typography.caption,
             )
             Spacer(modifier = Modifier.height(12.dp))
             Row(

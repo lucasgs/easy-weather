@@ -20,6 +20,7 @@ class WeatherUiModelMapperTest {
 
         assertEquals(
             WeatherUiModel(
+                locationName = "New York",
                 descriptionText = "Mainly clear, partly cloudy, and overcast",
                 currentTemperatureText = "10.0°",
                 highLowText = "H:1.0°  L:2.0°",
@@ -33,6 +34,7 @@ class WeatherUiModelMapperTest {
 
     private companion object {
         val fakeWeather = Weather(
+            locationName = "New York",
             weatherUnit = WeatherUnits(
                 temperature = "",
                 wind = "km/h",

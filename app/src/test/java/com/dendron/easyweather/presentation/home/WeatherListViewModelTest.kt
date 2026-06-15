@@ -152,6 +152,7 @@ class WeatherListViewModelTest {
         const val LONG = 1.0
 
         val fakeWeatherUiModel = WeatherUiModel(
+            locationName = "New York",
             descriptionText = "Mainly clear, partly cloudy, and overcast",
             currentTemperatureText = "10.0°",
             highLowText = "H:1.0°  L:2.0°",
@@ -161,6 +162,7 @@ class WeatherListViewModelTest {
         )
 
         val fakeWeather = Weather(
+            locationName = "New York",
             weatherUnit = WeatherUnits(
                 temperature = "",
                 wind = "km/h",

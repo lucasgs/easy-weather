@@ -11,6 +11,7 @@ class WeatherUiModelMapper @Inject constructor(
     fun map(weather: Weather): WeatherUiModel {
         val windDirectionText = windDirectionMapper.map(weather.windDirection)
         return WeatherUiModel(
+            locationName = weather.locationName,
             weatherIcon = weatherIconMapper.map(weather.weatherCode),
             descriptionText = weatherDescriptionMapper.map(weather.weatherCode),
             currentTemperatureText = "${weather.currentTemperature}°",

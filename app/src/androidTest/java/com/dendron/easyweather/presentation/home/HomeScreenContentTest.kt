@@ -104,6 +104,7 @@ class HomeScreenContentTest {
         setContent(
             state = WeatherScreenState.Content(
                 model = WeatherUiModel(
+                    locationName = "New York",
                     descriptionText = "Clear sky",
                     currentTemperatureText = "18°",
                     highLowText = "H:22°  L:12°",
@@ -115,6 +116,7 @@ class HomeScreenContentTest {
             ),
         )
 
+        composeTestRule.onNodeWithText("New York").assertIsDisplayed()
         composeTestRule.onNodeWithText("Today").assertIsDisplayed()
         composeTestRule.onNodeWithText("18°").assertIsDisplayed()
         composeTestRule.onNodeWithText("Clear sky").assertIsDisplayed()
