@@ -29,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherConditions
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherImageAndDescription
+import com.dendron.easyweather.presentation.home.components.FirstRunPanel
 import com.dendron.easyweather.presentation.home.components.WeatherStatusPanel
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -80,10 +81,7 @@ internal fun HomeScreenContent(
     modifier: Modifier = Modifier,
 ) {
     when (val currentState = state) {
-        WeatherScreenState.Empty -> WeatherStatusPanel(
-            title = stringResource(R.string.weather_empty_title),
-            message = stringResource(R.string.weather_empty_message),
-            primaryActionLabel = stringResource(R.string.weather_get_started_action),
+        WeatherScreenState.Empty -> FirstRunPanel(
             onPrimaryAction = onRequestPermission,
             modifier = modifier,
         )

@@ -18,7 +18,7 @@ class HomeScreenContentTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun emptyState_showsGetStartedCopy() {
+    fun emptyState_showsFirstRunGuidance() {
         var permissionRequests = 0
 
         setContent(
@@ -26,10 +26,13 @@ class HomeScreenContentTest {
             onRequestPermission = { permissionRequests += 1 },
         )
 
-        composeTestRule.onNodeWithText("Ready to check the weather").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Get a local forecast in seconds").assertIsDisplayed()
         composeTestRule.onNodeWithText(
-            "Use your location to fetch the latest local forecast.",
+            "EasyWeather uses your location once to show the weather where you are right now.",
         ).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Current conditions for your area").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Quick refresh whenever the weather changes").assertIsDisplayed()
+        composeTestRule.onNodeWithText("No account setup required").assertIsDisplayed()
         composeTestRule.onNodeWithText("Use my location").performClick()
 
         assertEquals(1, permissionRequests)

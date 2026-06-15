@@ -1,8 +1,11 @@
 <resources>
     <string name="app_name">Easy Weather</string>
-    <string name="weather_empty_title">Ready to check the weather</string>
-    <string name="weather_empty_message">Use your location to fetch the latest local forecast.</string>
+    <string name="weather_empty_title">Get a local forecast in seconds</string>
+    <string name="weather_empty_message">EasyWeather uses your location once to show the weather where you are right now.</string>
     <string name="weather_get_started_action">Use my location</string>
+    <string name="weather_empty_benefit_current">Current conditions for your area</string>
+    <string name="weather_empty_benefit_refresh">Quick refresh whenever the weather changes</string>
+    <string name="weather_empty_benefit_privacy">No account setup required</string>
     <string name="weather_loading_title">Loading weather</string>
     <string name="weather_loading_message">Fetching the latest forecast for your current location.</string>
     <string name="weather_error_title">Couldn’t load the weather</string>
