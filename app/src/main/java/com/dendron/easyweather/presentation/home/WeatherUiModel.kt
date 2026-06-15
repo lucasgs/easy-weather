@@ -14,4 +14,5 @@ data class WeatherUiModel(
     val hourlyForecast: List<HourlyForecastUiModel>,
     val dailyForecast: List<DailyForecastUiModel>,
     val weatherIcon: Int,
+    val palette: WeatherPalette,
 )

@@ -25,9 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.WeatherUiModel
-import com.dendron.easyweather.presentation.ui.theme.BlueLight
-import com.dendron.easyweather.presentation.ui.theme.WhiteDark
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 import java.text.DateFormat
 import java.util.Date
 
@@ -35,75 +33,75 @@ import java.util.Date
 fun CurrentWeatherImageAndDescription(
     model: WeatherUiModel,
     lastUpdatedAtMillis: Long,
+    modifier: Modifier = Modifier,
 ) {
     val lastUpdatedText = remember(lastUpdatedAtMillis) {
         DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(lastUpdatedAtMillis))
     }
 
     Surface(
-        color = WhiteLight.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier
+        color = model.palette.cardTint.copy(alpha = 0.16f),
+        shape = RoundedCornerShape(WeatherDimens.cardCornerLarge),
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = WeatherDimens.screenPadding),
     ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-        ) {
+        Column(modifier = Modifier.padding(WeatherDimens.contentPadding)) {
             Text(
                 text = model.locationName,
-                color = WhiteDark,
+                color = model.palette.secondaryText,
                 style = MaterialTheme.typography.overline,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.weather_today_title),
-                color = WhiteDark,
+                color = model.palette.secondaryText,
                 style = MaterialTheme.typography.caption,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.mediumSpacing))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(WeatherDimens.largeSpacing),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Image(
                     painter = painterResource(id = model.weatherIcon),
                     contentDescription = model.descriptionText,
-                    colorFilter = ColorFilter.tint(BlueLight),
+                    colorFilter = ColorFilter.tint(model.palette.accent),
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(88.dp)
                         .background(
-                            color = WhiteLight.copy(alpha = 0.14f),
-                            shape = RoundedCornerShape(18.dp),
+                            color = model.palette.primaryText.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(WeatherDimens.cardCornerSmall),
                         )
-                        .padding(14.dp),
+                        .padding(18.dp),
                 )
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = model.currentTemperatureText,
-                        color = WhiteLight,
-                        style = MaterialTheme.typography.h3,
+                        color = model.palette.primaryText,
+                        style = MaterialTheme.typography.h2,
                         fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = model.descriptionText,
-                        color = WhiteLight,
-                        style = MaterialTheme.typography.h6,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
+                        text = model.descriptionText,
+                        color = model.palette.primaryText,
+                        style = MaterialTheme.typography.h6,
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
                         text = model.highLowText,
-                        color = WhiteDark,
+                        color = model.palette.secondaryText,
                         style = MaterialTheme.typography.body1,
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.largeSpacing))
             Text(
                 text = stringResource(R.string.weather_last_updated, lastUpdatedText),
-                color = WhiteDark,
+                color = model.palette.secondaryText,
                 style = MaterialTheme.typography.body2,
             )
         }

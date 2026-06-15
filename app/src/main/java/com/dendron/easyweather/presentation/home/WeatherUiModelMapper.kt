@@ -24,6 +24,7 @@ class WeatherUiModelMapper @Inject constructor(
             sunsetText = weather.sunset.toDisplayTime(),
             hourlyForecast = weather.hourlyForecast.map { it.toUiModel() },
             dailyForecast = weather.dailyForecast.map { it.toUiModel() },
+            palette = weatherPaletteForCode(weather.weatherCode),
         )
     }
 }

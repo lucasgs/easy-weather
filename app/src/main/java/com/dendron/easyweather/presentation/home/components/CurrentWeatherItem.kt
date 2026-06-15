@@ -16,12 +16,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.dendron.easyweather.presentation.ui.theme.BlueLight
-import com.dendron.easyweather.presentation.ui.theme.WhiteDark
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @Composable
 fun CurrentWeatherItem(
@@ -29,22 +28,26 @@ fun CurrentWeatherItem(
     @DrawableRes iconId: Int,
     iconDescription: String,
     text: String,
+    accentColor: Color,
+    surfaceTint: Color,
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        color = WhiteLight.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(20.dp),
+        color = surfaceTint.copy(alpha = 0.16f),
+        shape = RoundedCornerShape(WeatherDimens.cardCornerMedium),
         modifier = modifier.fillMaxHeight(),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(WeatherDimens.largeSpacing),
         ) {
             Text(
                 text = title,
-                color = WhiteDark,
+                color = secondaryTextColor,
                 style = MaterialTheme.typography.overline,
             )
             Row(
@@ -54,12 +57,12 @@ fun CurrentWeatherItem(
                 Image(
                     painter = painterResource(id = iconId),
                     contentDescription = iconDescription,
-                    colorFilter = ColorFilter.tint(BlueLight),
+                    colorFilter = ColorFilter.tint(accentColor),
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
                     text = text,
-                    color = WhiteLight,
+                    color = primaryTextColor,
                     style = MaterialTheme.typography.body1,
                 )
             }

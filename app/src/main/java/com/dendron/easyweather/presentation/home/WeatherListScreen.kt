@@ -7,9 +7,11 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -21,9 +23,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dendron.easyweather.R
@@ -32,8 +34,10 @@ import com.dendron.easyweather.presentation.home.components.CurrentWeatherImageA
 import com.dendron.easyweather.presentation.home.components.DailyForecastSection
 import com.dendron.easyweather.presentation.home.components.FirstRunPanel
 import com.dendron.easyweather.presentation.home.components.HourlyForecastSection
+import com.dendron.easyweather.presentation.home.components.LoadingWeatherSkeleton
 import com.dendron.easyweather.presentation.home.components.ManualLocationPanel
 import com.dendron.easyweather.presentation.home.components.WeatherStatusPanel
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -93,66 +97,82 @@ internal fun HomeScreenContent(
     onOpenLocationSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    when (val currentState = state) {
-        WeatherScreenState.Empty -> FirstRunPanel(
-            onPrimaryAction = onRequestPermission,
-            onSecondaryAction = onShowManualLocation,
-            modifier = modifier,
-        )
+    val palette = state.palette()
 
-        is WeatherScreenState.ManualLocation -> ManualLocationPanel(
-            query = currentState.query,
-            isSearching = currentState.isSearching,
-            results = currentState.results,
-            errorMessage = currentState.errorMessage,
-            onQueryChange = onManualLocationQueryChange,
-            onSearch = onManualLocationSearch,
-            onSelect = onManualLocationSelect,
-            onBack = onManualLocationBack,
-            modifier = modifier,
-        )
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(palette.backgroundTop, palette.backgroundBottom),
+                ),
+            ),
+    ) {
+        when (val currentState = state) {
+            WeatherScreenState.Empty -> FirstRunPanel(
+                palette = palette,
+                onPrimaryAction = onRequestPermission,
+                onSecondaryAction = onShowManualLocation,
+                modifier = Modifier.fillMaxSize(),
+            )
 
-        WeatherScreenState.Loading -> WeatherStatusPanel(
-            title = stringResource(R.string.weather_loading_title),
-            message = stringResource(R.string.weather_loading_message),
-            modifier = modifier,
-        )
+            is WeatherScreenState.ManualLocation -> ManualLocationPanel(
+                palette = palette,
+                query = currentState.query,
+                isSearching = currentState.isSearching,
+                results = currentState.results,
+                errorMessage = currentState.errorMessage,
+                onQueryChange = onManualLocationQueryChange,
+                onSearch = onManualLocationSearch,
+                onSelect = onManualLocationSelect,
+                onBack = onManualLocationBack,
+                modifier = Modifier.fillMaxSize(),
+            )
 
-        is WeatherScreenState.Content -> WeatherContent(
-            model = currentState.model,
-            lastUpdatedAtMillis = currentState.lastUpdatedAtMillis,
-            isRefreshing = currentState.isRefreshing,
-            onRefresh = onRefresh,
-            modifier = modifier,
-        )
+            WeatherScreenState.Loading -> LoadingWeatherSkeleton(
+                palette = palette,
+                modifier = Modifier.fillMaxSize(),
+            )
 
-        is WeatherScreenState.Error -> WeatherStatusPanel(
-            title = stringResource(R.string.weather_error_title),
-            message = stringResource(currentState.reason.messageResId),
-            primaryActionLabel = stringResource(R.string.weather_retry_action),
-            onPrimaryAction = onRefresh,
-            modifier = modifier,
-        )
+            is WeatherScreenState.Content -> WeatherContent(
+                model = currentState.model,
+                lastUpdatedAtMillis = currentState.lastUpdatedAtMillis,
+                isRefreshing = currentState.isRefreshing,
+                onRefresh = onRefresh,
+                modifier = Modifier.fillMaxSize(),
+            )
 
-        WeatherScreenState.PermissionRequired -> WeatherStatusPanel(
-            title = stringResource(R.string.weather_permission_title),
-            message = stringResource(R.string.weather_permission_message),
-            primaryActionLabel = stringResource(R.string.weather_permission_action),
-            onPrimaryAction = onRequestPermission,
-            secondaryActionLabel = stringResource(R.string.weather_open_settings_action),
-            onSecondaryAction = onOpenAppSettings,
-            modifier = modifier,
-        )
+            is WeatherScreenState.Error -> WeatherStatusPanel(
+                palette = palette,
+                title = stringResource(R.string.weather_error_title),
+                message = stringResource(currentState.reason.messageResId),
+                primaryActionLabel = stringResource(R.string.weather_retry_action),
+                onPrimaryAction = onRefresh,
+                modifier = Modifier.fillMaxSize(),
+            )
 
-        WeatherScreenState.LocationDisabled -> WeatherStatusPanel(
-            title = stringResource(R.string.weather_location_disabled_title),
-            message = stringResource(R.string.weather_location_disabled_message),
-            primaryActionLabel = stringResource(R.string.weather_location_settings_action),
-            onPrimaryAction = onOpenLocationSettings,
-            secondaryActionLabel = stringResource(R.string.weather_retry_action),
-            onSecondaryAction = onRefresh,
-            modifier = modifier,
-        )
+            WeatherScreenState.PermissionRequired -> WeatherStatusPanel(
+                palette = palette,
+                title = stringResource(R.string.weather_permission_title),
+                message = stringResource(R.string.weather_permission_message),
+                primaryActionLabel = stringResource(R.string.weather_permission_action),
+                onPrimaryAction = onRequestPermission,
+                secondaryActionLabel = stringResource(R.string.weather_open_settings_action),
+                onSecondaryAction = onOpenAppSettings,
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            WeatherScreenState.LocationDisabled -> WeatherStatusPanel(
+                palette = palette,
+                title = stringResource(R.string.weather_location_disabled_title),
+                message = stringResource(R.string.weather_location_disabled_message),
+                primaryActionLabel = stringResource(R.string.weather_location_settings_action),
+                onPrimaryAction = onOpenLocationSettings,
+                secondaryActionLabel = stringResource(R.string.weather_retry_action),
+                onSecondaryAction = onRefresh,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -172,13 +192,14 @@ private fun WeatherContent(
         modifier = modifier.pullRefresh(refreshState),
     ) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(WeatherDimens.sectionSpacing),
             modifier = Modifier.fillMaxSize(),
         ) {
             item {
                 CurrentWeatherImageAndDescription(
                     model = model,
                     lastUpdatedAtMillis = lastUpdatedAtMillis,
+                    modifier = Modifier.padding(top = WeatherDimens.screenPadding),
                 )
             }
             item {
@@ -186,12 +207,19 @@ private fun WeatherContent(
             }
             if (model.hourlyForecast.isNotEmpty()) {
                 item {
-                    HourlyForecastSection(items = model.hourlyForecast)
+                    HourlyForecastSection(
+                        items = model.hourlyForecast,
+                        palette = model.palette,
+                    )
                 }
             }
             if (model.dailyForecast.isNotEmpty()) {
                 item {
-                    DailyForecastSection(items = model.dailyForecast)
+                    DailyForecastSection(
+                        items = model.dailyForecast,
+                        palette = model.palette,
+                        modifier = Modifier.padding(bottom = WeatherDimens.screenPadding),
+                    )
                 }
             }
         }
@@ -201,6 +229,11 @@ private fun WeatherContent(
             modifier = Modifier.align(Alignment.TopCenter),
         )
     }
+}
+
+private fun WeatherScreenState.palette(): WeatherPalette = when (this) {
+    is WeatherScreenState.Content -> model.palette
+    else -> DefaultWeatherPalette
 }
 
 private val ErrorReason.messageResId: Int

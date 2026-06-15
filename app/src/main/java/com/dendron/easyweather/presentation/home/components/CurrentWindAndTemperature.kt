@@ -8,15 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.WeatherUiModel
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @Composable
 fun CurrentWeatherConditions(
@@ -25,16 +23,16 @@ fun CurrentWeatherConditions(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = WeatherDimens.screenPadding),
     ) {
         Text(
             text = stringResource(R.string.weather_condition_title),
-            color = WhiteLight,
+            color = model.palette.primaryText,
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(bottom = 12.dp),
+            modifier = Modifier.padding(bottom = WeatherDimens.mediumSpacing),
         )
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
@@ -44,6 +42,10 @@ fun CurrentWeatherConditions(
                 iconId = R.drawable.wind,
                 iconDescription = stringResource(R.string.weather_wind_icon_description),
                 text = model.windText,
+                accentColor = model.palette.accent,
+                surfaceTint = model.palette.cardTint,
+                primaryTextColor = model.palette.primaryText,
+                secondaryTextColor = model.palette.secondaryText,
                 modifier = Modifier.weight(1f),
             )
             CurrentWeatherItem(
@@ -51,21 +53,29 @@ fun CurrentWeatherConditions(
                 iconId = R.drawable.thermometer,
                 iconDescription = stringResource(R.string.weather_temperature_icon_description),
                 text = model.temperatureText,
+                accentColor = model.palette.accent,
+                surfaceTint = model.palette.cardTint,
+                primaryTextColor = model.palette.primaryText,
+                secondaryTextColor = model.palette.secondaryText,
                 modifier = Modifier.weight(1f),
             )
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
-                .padding(top = 12.dp),
+                .padding(top = WeatherDimens.mediumSpacing),
         ) {
             CurrentWeatherItem(
                 title = stringResource(R.string.weather_humidity_label),
                 iconId = R.drawable.thermometer,
                 iconDescription = stringResource(R.string.weather_temperature_icon_description),
                 text = model.humidityText,
+                accentColor = model.palette.accent,
+                surfaceTint = model.palette.cardTint,
+                primaryTextColor = model.palette.primaryText,
+                secondaryTextColor = model.palette.secondaryText,
                 modifier = Modifier.weight(1f),
             )
             CurrentWeatherItem(
@@ -73,21 +83,29 @@ fun CurrentWeatherConditions(
                 iconId = R.drawable.rain,
                 iconDescription = stringResource(R.string.weather_temperature_icon_description),
                 text = model.precipitationText,
+                accentColor = model.palette.accent,
+                surfaceTint = model.palette.cardTint,
+                primaryTextColor = model.palette.primaryText,
+                secondaryTextColor = model.palette.secondaryText,
                 modifier = Modifier.weight(1f),
             )
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
-                .padding(top = 12.dp),
+                .padding(top = WeatherDimens.mediumSpacing),
         ) {
             CurrentWeatherItem(
                 title = stringResource(R.string.weather_sunrise_label),
                 iconId = R.drawable.day_sunny,
                 iconDescription = stringResource(R.string.weather_temperature_icon_description),
                 text = model.sunriseText,
+                accentColor = model.palette.accent,
+                surfaceTint = model.palette.cardTint,
+                primaryTextColor = model.palette.primaryText,
+                secondaryTextColor = model.palette.secondaryText,
                 modifier = Modifier.weight(1f),
             )
             CurrentWeatherItem(
@@ -95,6 +113,10 @@ fun CurrentWeatherConditions(
                 iconId = R.drawable.day_sunny,
                 iconDescription = stringResource(R.string.weather_temperature_icon_description),
                 text = model.sunsetText,
+                accentColor = model.palette.accent,
+                surfaceTint = model.palette.cardTint,
+                primaryTextColor = model.palette.primaryText,
+                secondaryTextColor = model.palette.secondaryText,
                 modifier = Modifier.weight(1f),
             )
         }

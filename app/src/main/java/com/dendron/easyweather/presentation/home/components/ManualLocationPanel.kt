@@ -25,11 +25,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.R
 import com.dendron.easyweather.domain.location.SearchedLocation
-import com.dendron.easyweather.presentation.ui.theme.WhiteDark
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.home.WeatherPalette
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @Composable
 fun ManualLocationPanel(
+    palette: WeatherPalette,
     query: String,
     isSearching: Boolean,
     results: List<SearchedLocation>,
@@ -41,25 +42,29 @@ fun ManualLocationPanel(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        color = WhiteLight.copy(alpha = 0.08f),
-        shape = RoundedCornerShape(28.dp),
+        color = palette.cardTint.copy(alpha = 0.14f),
+        shape = RoundedCornerShape(WeatherDimens.cardCornerLarge),
         modifier = modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .padding(WeatherDimens.screenPadding),
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(WeatherDimens.contentPadding),
+        ) {
             Text(
                 text = stringResource(R.string.weather_manual_title),
-                color = WhiteLight,
-                style = MaterialTheme.typography.h5,
+                color = palette.primaryText,
+                style = MaterialTheme.typography.h4,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.compactSpacing))
             Text(
                 text = stringResource(R.string.weather_manual_message),
-                color = WhiteDark,
+                color = palette.secondaryText,
                 style = MaterialTheme.typography.body1,
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.sectionSpacing))
             OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
@@ -67,39 +72,48 @@ fun ManualLocationPanel(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = onSearch) {
+            Spacer(modifier = Modifier.height(WeatherDimens.mediumSpacing))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Button(
+                    onClick = onSearch,
+                    modifier = Modifier.weight(1f),
+                ) {
                     Text(if (isSearching) stringResource(R.string.weather_loading_title) else stringResource(R.string.weather_manual_search_action))
                 }
-                OutlinedButton(onClick = onBack) {
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier.weight(1f),
+                ) {
                     Text(stringResource(R.string.weather_manual_back_action))
                 }
             }
             if (errorMessage != null) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(WeatherDimens.mediumSpacing))
                 Text(
                     text = errorMessage,
-                    color = WhiteDark,
+                    color = palette.secondaryText,
                     style = MaterialTheme.typography.body2,
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.largeSpacing))
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(results) { location ->
                     Surface(
-                        color = WhiteLight.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(18.dp),
+                        color = palette.primaryText.copy(alpha = 0.10f),
+                        shape = RoundedCornerShape(WeatherDimens.cardCornerSmall),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelect(location) },
                     ) {
                         Text(
                             text = location.displayName,
-                            color = WhiteLight,
+                            color = palette.primaryText,
                             style = MaterialTheme.typography.body1,
                             textAlign = TextAlign.Start,
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(WeatherDimens.largeSpacing),
                         )
                     }
                 }

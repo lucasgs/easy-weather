@@ -18,32 +18,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.HourlyForecastUiModel
-import com.dendron.easyweather.presentation.ui.theme.WhiteDark
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.home.WeatherPalette
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @Composable
 fun HourlyForecastSection(
     items: List<HourlyForecastUiModel>,
+    palette: WeatherPalette,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(start = WeatherDimens.screenPadding),
     ) {
         Text(
             text = stringResource(R.string.weather_hourly_title),
-            color = WhiteLight,
+            color = palette.primaryText,
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(bottom = 12.dp),
+            modifier = Modifier.padding(bottom = WeatherDimens.mediumSpacing),
         )
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(end = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
+            contentPadding = PaddingValues(end = WeatherDimens.screenPadding),
         ) {
             items(items) { item ->
                 Surface(
-                    color = WhiteLight.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(20.dp),
+                    color = palette.cardTint.copy(alpha = 0.16f),
+                    shape = RoundedCornerShape(WeatherDimens.cardCornerMedium),
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -51,12 +52,12 @@ fun HourlyForecastSection(
                     ) {
                         Text(
                             text = item.timeText,
-                            color = WhiteDark,
+                            color = palette.secondaryText,
                             style = MaterialTheme.typography.overline,
                         )
                         Text(
                             text = item.temperatureText,
-                            color = WhiteLight,
+                            color = palette.primaryText,
                             style = MaterialTheme.typography.h6,
                             textAlign = TextAlign.Center,
                         )

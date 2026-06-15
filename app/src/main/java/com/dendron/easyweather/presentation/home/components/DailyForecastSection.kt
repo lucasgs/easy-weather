@@ -15,46 +15,48 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.DailyForecastUiModel
-import com.dendron.easyweather.presentation.ui.theme.WhiteDark
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.home.WeatherPalette
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @Composable
 fun DailyForecastSection(
     items: List<DailyForecastUiModel>,
+    palette: WeatherPalette,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = WeatherDimens.screenPadding),
     ) {
         Text(
             text = stringResource(R.string.weather_daily_title),
-            color = WhiteLight,
+            color = palette.primaryText,
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(bottom = 12.dp),
+            modifier = Modifier.padding(bottom = WeatherDimens.mediumSpacing),
         )
 
         Surface(
-            color = WhiteLight.copy(alpha = 0.12f),
-            shape = RoundedCornerShape(20.dp),
+            color = palette.cardTint.copy(alpha = 0.16f),
+            shape = RoundedCornerShape(WeatherDimens.cardCornerLarge),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Column(modifier = Modifier.padding(vertical = 6.dp)) {
+            Column(modifier = Modifier.padding(vertical = 10.dp)) {
                 items.forEach { item ->
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = 18.dp, vertical = 14.dp),
                     ) {
                         Text(
                             text = item.dayLabel,
-                            color = WhiteDark,
+                            color = palette.secondaryText,
                             style = MaterialTheme.typography.body1,
                         )
                         Text(
                             text = item.rangeText,
-                            color = WhiteLight,
+                            color = palette.primaryText,
                             style = MaterialTheme.typography.body1,
                         )
                     }

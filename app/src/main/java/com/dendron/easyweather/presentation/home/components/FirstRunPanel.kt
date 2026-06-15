@@ -25,52 +25,52 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.R
-import com.dendron.easyweather.presentation.ui.theme.BlueLight
-import com.dendron.easyweather.presentation.ui.theme.WhiteDark
-import com.dendron.easyweather.presentation.ui.theme.WhiteLight
+import com.dendron.easyweather.presentation.home.WeatherPalette
+import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
 
 @Composable
 fun FirstRunPanel(
+    palette: WeatherPalette,
     onPrimaryAction: () -> Unit,
     onSecondaryAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        color = WhiteLight.copy(alpha = 0.08f),
-        shape = RoundedCornerShape(28.dp),
+        color = palette.cardTint.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(WeatherDimens.cardCornerLarge),
         modifier = modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .padding(WeatherDimens.screenPadding),
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(WeatherDimens.contentPadding),
         ) {
             Text(
                 text = stringResource(R.string.weather_empty_title),
-                color = WhiteLight,
+                color = palette.primaryText,
                 style = MaterialTheme.typography.h4,
                 textAlign = TextAlign.Center,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.mediumSpacing))
             Text(
                 text = stringResource(R.string.weather_empty_message),
-                color = WhiteDark,
+                color = palette.secondaryText,
                 style = MaterialTheme.typography.body1,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(28.dp))
-            BenefitRow(text = stringResource(R.string.weather_empty_benefit_current))
-            BenefitRow(text = stringResource(R.string.weather_empty_benefit_refresh))
-            BenefitRow(text = stringResource(R.string.weather_empty_benefit_privacy))
+            BenefitRow(text = stringResource(R.string.weather_empty_benefit_current), palette = palette)
+            BenefitRow(text = stringResource(R.string.weather_empty_benefit_refresh), palette = palette)
+            BenefitRow(text = stringResource(R.string.weather_empty_benefit_privacy), palette = palette)
             Spacer(modifier = Modifier.height(28.dp))
             Button(onClick = onPrimaryAction) {
                 Text(text = stringResource(R.string.weather_get_started_action))
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(WeatherDimens.mediumSpacing))
             OutlinedButton(onClick = onSecondaryAction) {
                 Text(text = stringResource(R.string.weather_choose_city_action))
             }
@@ -79,7 +79,10 @@ fun FirstRunPanel(
 }
 
 @Composable
-private fun BenefitRow(text: String) {
+private fun BenefitRow(
+    text: String,
+    palette: WeatherPalette,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -90,11 +93,11 @@ private fun BenefitRow(text: String) {
         Box(
             modifier = Modifier
                 .size(10.dp)
-                .background(BlueLight, CircleShape),
+                .background(palette.accent, CircleShape),
         )
         Text(
             text = text,
-            color = WhiteLight,
+            color = palette.primaryText,
             style = MaterialTheme.typography.body1,
         )
     }
