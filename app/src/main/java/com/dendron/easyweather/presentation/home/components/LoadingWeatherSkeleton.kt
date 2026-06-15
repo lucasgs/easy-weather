@@ -1,5 +1,6 @@
 package com.dendron.easyweather.presentation.home.components
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -25,7 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dendron.easyweather.presentation.home.WeatherPalette
 import com.dendron.easyweather.presentation.ui.theme.WeatherDimens
@@ -35,6 +39,8 @@ fun LoadingWeatherSkeleton(
     palette: WeatherPalette,
     modifier: Modifier = Modifier,
 ) {
+    val shimmer = rememberSkeletonBrush(palette)
+
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(WeatherDimens.sectionSpacing),
         contentPadding = PaddingValues(vertical = WeatherDimens.screenPadding),
@@ -46,23 +52,27 @@ fun LoadingWeatherSkeleton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = WeatherDimens.screenPadding)
-                    .height(220.dp),
+                    .height(236.dp),
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SkeletonLine(palette, width = 110.dp)
-                    SkeletonLine(palette, width = 70.dp, height = 12.dp)
-                    Box(modifier = Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        SkeletonLine(palette, width = 84.dp, height = 84.dp)
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            SkeletonLine(palette, width = 120.dp, height = 36.dp)
-                            SkeletonLine(palette, width = 160.dp)
-                            SkeletonLine(palette, width = 96.dp)
-                        }
+                SkeletonLine(shimmer, width = 112.dp, color = palette.secondaryText)
+                SkeletonLine(shimmer, width = 64.dp, height = 12.dp, color = palette.secondaryText)
+                Box(modifier = Modifier.height(WeatherDimens.mediumSpacing))
+                Row(horizontalArrangement = Arrangement.spacedBy(WeatherDimens.largeSpacing)) {
+                    SkeletonBlock(
+                        shimmer = shimmer,
+                        width = 88.dp,
+                        height = 88.dp,
+                        cornerRadius = WeatherDimens.cardCornerSmall,
+                        color = palette.accent,
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing)) {
+                        SkeletonLine(shimmer, width = 120.dp, height = 42.dp)
+                        SkeletonLine(shimmer, width = 168.dp)
+                        SkeletonLine(shimmer, width = 104.dp, color = palette.secondaryText)
                     }
-                    Box(modifier = Modifier.height(8.dp))
-                    SkeletonLine(palette, width = 140.dp)
                 }
+                Box(modifier = Modifier.height(WeatherDimens.compactSpacing))
+                SkeletonLine(shimmer, width = 144.dp, color = palette.secondaryText)
             }
         }
 
@@ -72,25 +82,15 @@ fun LoadingWeatherSkeleton(
                     .fillMaxWidth()
                     .padding(horizontal = WeatherDimens.screenPadding),
             ) {
-                SkeletonLine(palette, width = 136.dp, height = 18.dp)
+                SkeletonLine(shimmer, width = 136.dp, height = 18.dp)
                 Box(modifier = Modifier.height(14.dp))
                 repeat(3) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        SkeletonCard(
-                            palette = palette,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(88.dp),
-                        ) {}
-                        SkeletonCard(
-                            palette = palette,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(88.dp),
-                        ) {}
+                    Row(horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing)) {
+                        SkeletonMetricCard(palette, shimmer, Modifier.weight(1f))
+                        SkeletonMetricCard(palette, shimmer, Modifier.weight(1f))
                     }
                     if (it < 2) {
-                        Box(modifier = Modifier.height(12.dp))
+                        Box(modifier = Modifier.height(WeatherDimens.mediumSpacing))
                     }
                 }
             }
@@ -99,23 +99,28 @@ fun LoadingWeatherSkeleton(
         item {
             Column(modifier = Modifier.fillMaxWidth()) {
                 SkeletonLine(
-                    palette = palette,
+                    shimmer = shimmer,
                     width = 120.dp,
                     height = 18.dp,
                     modifier = Modifier.padding(horizontal = WeatherDimens.screenPadding),
                 )
                 Box(modifier = Modifier.height(14.dp))
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(WeatherDimens.mediumSpacing),
                     contentPadding = PaddingValues(horizontal = WeatherDimens.screenPadding),
                 ) {
                     items(listOf(1, 2, 3, 4, 5)) {
                         SkeletonCard(
                             palette = palette,
                             modifier = Modifier
-                                .width(92.dp)
-                                .height(112.dp),
-                        ) {}
+                                .width(96.dp)
+                                .height(116.dp),
+                        ) {
+                            SkeletonLine(shimmer, width = 36.dp, height = 10.dp, color = palette.secondaryText)
+                            Box(modifier = Modifier.height(12.dp))
+                            SkeletonLine(shimmer, width = 48.dp, height = 22.dp)
+                            SkeletonLine(shimmer, width = 42.dp, height = 14.dp, color = palette.secondaryText)
+                        }
                     }
                 }
             }
@@ -127,20 +132,39 @@ fun LoadingWeatherSkeleton(
                     .fillMaxWidth()
                     .padding(horizontal = WeatherDimens.screenPadding),
             ) {
-                SkeletonLine(palette, width = 100.dp, height = 18.dp)
+                SkeletonLine(shimmer, width = 100.dp, height = 18.dp)
                 Box(modifier = Modifier.height(14.dp))
                 SkeletonCard(
                     palette = palette,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        repeat(5) {
-                            SkeletonLine(palette, modifier = Modifier.fillMaxWidth(), height = 20.dp)
+                    repeat(5) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            SkeletonLine(shimmer, width = 44.dp, color = palette.secondaryText)
+                            SkeletonLine(shimmer, width = 72.dp)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SkeletonMetricCard(
+    palette: WeatherPalette,
+    shimmer: Brush,
+    modifier: Modifier = Modifier,
+) {
+    SkeletonCard(
+        palette = palette,
+        modifier = modifier.height(96.dp),
+    ) {
+        SkeletonLine(shimmer, width = 64.dp, height = 10.dp, color = palette.secondaryText)
+        SkeletonLine(shimmer, width = 92.dp, height = 18.dp)
     }
 }
 
@@ -154,7 +178,7 @@ private fun SkeletonCard(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
             .clip(RoundedCornerShape(WeatherDimens.cardCornerLarge))
-            .background(palette.cardTint.copy(alpha = 0.18f))
+            .background(palette.cardTint.copy(alpha = 0.16f))
             .padding(WeatherDimens.contentPadding),
         content = content,
     )
@@ -162,27 +186,61 @@ private fun SkeletonCard(
 
 @Composable
 private fun SkeletonLine(
-    palette: WeatherPalette,
+    shimmer: Brush,
     modifier: Modifier = Modifier,
-    width: androidx.compose.ui.unit.Dp = 160.dp,
-    height: androidx.compose.ui.unit.Dp = 16.dp,
+    width: Dp = 160.dp,
+    height: Dp = 16.dp,
+    color: Color = Color.White,
 ) {
-    val transition = rememberInfiniteTransition(label = "skeleton")
-    val alpha by transition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.75f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "skeleton-alpha",
+    SkeletonBlock(
+        shimmer = shimmer,
+        width = width,
+        height = height,
+        cornerRadius = 999.dp,
+        color = color,
+        modifier = modifier,
     )
+}
 
+@Composable
+private fun SkeletonBlock(
+    shimmer: Brush,
+    width: Dp,
+    height: Dp,
+    cornerRadius: Dp,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(palette.primaryText.copy(alpha = alpha))
             .width(width)
-            .height(height),
+            .height(height)
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(color.copy(alpha = 0.18f))
+            .background(shimmer),
+    )
+}
+
+@Composable
+private fun rememberSkeletonBrush(palette: WeatherPalette): Brush {
+    val transition = rememberInfiniteTransition(label = "skeleton-shimmer")
+    val xShift by transition.animateFloat(
+        initialValue = -300f,
+        targetValue = 900f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "skeleton-shift",
+    )
+
+    return Brush.linearGradient(
+        colors = listOf(
+            palette.primaryText.copy(alpha = 0.10f),
+            palette.primaryText.copy(alpha = 0.28f),
+            palette.primaryText.copy(alpha = 0.10f),
+        ),
+        start = Offset(xShift - 220f, 0f),
+        end = Offset(xShift, 280f),
     )
 }
