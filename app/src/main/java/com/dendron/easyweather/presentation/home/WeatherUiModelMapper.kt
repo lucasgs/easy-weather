@@ -19,6 +19,7 @@ class WeatherUiModelMapper @Inject constructor(
             windText = "${weather.windSpeed} ${weather.weatherUnit.wind} $windDirectionText",
             temperatureText = "${weather.minTemperature}° / ${weather.currentTemperature}° / ${weather.maxTemperature}°",
             hourlyForecast = weather.hourlyForecast.map { it.toUiModel() },
+            dailyForecast = weather.dailyForecast.map { it.toUiModel() },
         )
     }
 }

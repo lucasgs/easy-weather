@@ -1,6 +1,7 @@
 package com.dendron.easyweather.data.remote.model
 
 
+import com.dendron.easyweather.domain.DailyForecast
 import com.dendron.easyweather.domain.HourlyForecast
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherUnits
@@ -47,6 +48,15 @@ fun WeatherDto.toDomain() = Weather(
             HourlyForecast(
                 time = time,
                 temperature = temperature,
+            )
+        },
+    dailyForecast = daily.time.zip(daily.temperature2mMin.zip(daily.temperature2mMax))
+        .take(5)
+        .map { (date, temps) ->
+            DailyForecast(
+                date = date,
+                minTemperature = temps.first,
+                maxTemperature = temps.second,
             )
         },
     weatherUnit = WeatherUnits(

@@ -141,6 +141,10 @@ class HomeScreenContentTest {
                         HourlyForecastUiModel(timeText = "1pm", temperatureText = "18°"),
                         HourlyForecastUiModel(timeText = "2pm", temperatureText = "19°"),
                     ),
+                    dailyForecast = listOf(
+                        DailyForecastUiModel(dayLabel = "Sun", rangeText = "12° / 22°"),
+                        DailyForecastUiModel(dayLabel = "Mon", rangeText = "14° / 24°"),
+                    ),
                     weatherIcon = com.dendron.easyweather.R.drawable.day_sunny,
                 ),
                 lastUpdatedAtMillis = 1_718_000_000_000,
@@ -157,6 +161,9 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithText("Hourly forecast").assertIsDisplayed()
         composeTestRule.onNodeWithText("1pm").assertIsDisplayed()
         composeTestRule.onNodeWithText("19°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Next days").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Sun").assertIsDisplayed()
+        composeTestRule.onNodeWithText("14° / 24°").assertIsDisplayed()
         composeTestRule.onNodeWithText("Last updated:", substring = true).assertIsDisplayed()
     }
 

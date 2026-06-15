@@ -29,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.dendron.easyweather.R
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherConditions
 import com.dendron.easyweather.presentation.home.components.CurrentWeatherImageAndDescription
+import com.dendron.easyweather.presentation.home.components.DailyForecastSection
 import com.dendron.easyweather.presentation.home.components.FirstRunPanel
 import com.dendron.easyweather.presentation.home.components.HourlyForecastSection
 import com.dendron.easyweather.presentation.home.components.ManualLocationPanel
@@ -186,6 +187,11 @@ private fun WeatherContent(
             if (model.hourlyForecast.isNotEmpty()) {
                 item {
                     HourlyForecastSection(items = model.hourlyForecast)
+                }
+            }
+            if (model.dailyForecast.isNotEmpty()) {
+                item {
+                    DailyForecastSection(items = model.dailyForecast)
                 }
             }
         }

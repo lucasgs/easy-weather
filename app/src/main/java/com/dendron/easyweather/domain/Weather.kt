@@ -10,4 +10,5 @@ data class Weather(
     val windDirection: Int,
     val weatherCode: Int,
     val hourlyForecast: List<HourlyForecast>,
+    val dailyForecast: List<DailyForecast>,
 )
