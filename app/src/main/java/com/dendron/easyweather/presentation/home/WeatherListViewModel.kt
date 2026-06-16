@@ -10,7 +10,8 @@ import com.dendron.easyweather.domain.location.CurrentLocationResult
 import com.dendron.easyweather.domain.location.LocationSearchFailure
 import com.dendron.easyweather.domain.location.LocationSearchResult
 import com.dendron.easyweather.domain.location.SearchedLocation
-import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
+import com.dendron.easyweather.domain.usecase.LoadCurrentLocationWeatherResult
+import com.dendron.easyweather.domain.usecase.LoadCurrentLocationWeatherUseCase
 import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
 import com.dendron.easyweather.domain.usecase.SearchLocationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherListViewModel @Inject constructor(
-    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val loadCurrentLocationWeatherUseCase: LoadCurrentLocationWeatherUseCase,
     private val loadWeatherForCoordinatesUseCase: LoadWeatherForCoordinatesUseCase,
     private val searchLocationsUseCase: SearchLocationsUseCase,
     private val weatherUiModelMapper: WeatherUiModelMapper,
@@ -101,31 +102,41 @@ class WeatherListViewModel @Inject constructor(
 
     private fun loadCurrentLocationWeather(feedbackMessageResId: Int) {
         val currentContent = _state.value as? WeatherScreenState.Content
+        val isRefresh = currentContent != null || feedbackMessageResId != R.string.weather_loading_message
         showLoadingState(currentContent, feedbackMessageResId)
 
         viewModelScope.launch {
-            when (val currentLocation = getCurrentLocationUseCase()) {
-                is CurrentLocationResult.Success -> {
-                    fetchWeather(
-                        latitude = currentLocation.data.latitude,
-                        longitude = currentLocation.data.longitude,
-                        feedbackMessageResId = feedbackMessageResId,
-                    )
-                }
+            loadCurrentLocationWeatherUseCase(isRefresh).collect { result ->
+                when (result) {
+                    LoadCurrentLocationWeatherResult.Loading -> {
+                        showLoadingState(currentContent, feedbackMessageResId)
+                    }
 
-                is CurrentLocationResult.Failure -> {
-                    when (currentLocation.error) {
-                        CurrentLocationFailure.PermissionDenied -> {
-                            _state.value = WeatherScreenState.PermissionRequired
-                        }
+                    is LoadCurrentLocationWeatherResult.Success -> {
+                        _state.value = WeatherScreenState.Content(
+                            model = weatherUiModelMapper.map(result.weather),
+                            lastUpdatedAtMillis = System.currentTimeMillis(),
+                        )
+                    }
 
-                        CurrentLocationFailure.LocationDisabled -> {
-                            _state.value = WeatherScreenState.LocationDisabled
-                        }
+                    is LoadCurrentLocationWeatherResult.LocationFailure -> {
+                        when (result.error) {
+                            CurrentLocationFailure.PermissionDenied -> {
+                                _state.value = WeatherScreenState.PermissionRequired
+                            }
 
-                        CurrentLocationFailure.Unavailable -> {
-                            _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
+                            CurrentLocationFailure.LocationDisabled -> {
+                                _state.value = WeatherScreenState.LocationDisabled
+                            }
+
+                            CurrentLocationFailure.Unavailable -> {
+                                _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
+                            }
                         }
+                    }
+
+                    is LoadCurrentLocationWeatherResult.WeatherFailureResult -> {
+                        _state.value = WeatherScreenState.Error(result.error.toErrorReason())
                     }
                 }
             }

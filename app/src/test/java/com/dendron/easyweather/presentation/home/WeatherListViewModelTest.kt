@@ -17,6 +17,7 @@ import com.dendron.easyweather.domain.location.LocationProvider
 import com.dendron.easyweather.domain.location.LocationSearchRepository
 import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
 import com.dendron.easyweather.domain.usecase.GetCurrentWeatherUseCase
+import com.dendron.easyweather.domain.usecase.LoadCurrentLocationWeatherUseCase
 import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
 import com.dendron.easyweather.domain.usecase.RefreshWeatherUseCase
 import com.dendron.easyweather.domain.usecase.SearchLocationsUseCase
@@ -58,12 +59,16 @@ class WeatherListViewModelTest {
             weatherIconMapper = WeatherIconMapper(),
             windDirectionMapper = WindDirectionMapper(),
         )
+        val loadWeatherForCoordinatesUseCase = LoadWeatherForCoordinatesUseCase(
+            getCurrentWeatherUseCase = GetCurrentWeatherUseCase(weatherRepository),
+            refreshWeatherUseCase = RefreshWeatherUseCase(weatherRepository),
+        )
         viewModel = WeatherListViewModel(
-            getCurrentLocationUseCase = GetCurrentLocationUseCase(locationProvider),
-            loadWeatherForCoordinatesUseCase = LoadWeatherForCoordinatesUseCase(
-                getCurrentWeatherUseCase = GetCurrentWeatherUseCase(weatherRepository),
-                refreshWeatherUseCase = RefreshWeatherUseCase(weatherRepository),
+            loadCurrentLocationWeatherUseCase = LoadCurrentLocationWeatherUseCase(
+                getCurrentLocationUseCase = GetCurrentLocationUseCase(locationProvider),
+                loadWeatherForCoordinatesUseCase = loadWeatherForCoordinatesUseCase,
             ),
+            loadWeatherForCoordinatesUseCase = loadWeatherForCoordinatesUseCase,
             searchLocationsUseCase = SearchLocationsUseCase(locationSearchRepository),
             weatherUiModelMapper = weatherUiModelMapper,
         )
