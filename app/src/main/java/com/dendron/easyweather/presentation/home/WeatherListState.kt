@@ -4,7 +4,9 @@ import com.dendron.easyweather.domain.location.SearchedLocation
 
 sealed interface WeatherScreenState {
     data object Empty : WeatherScreenState
-    data object Loading : WeatherScreenState
+    data class Loading(
+        val feedbackMessageResId: Int? = null,
+    ) : WeatherScreenState
     data object PermissionRequired : WeatherScreenState
     data object LocationDisabled : WeatherScreenState
 
@@ -19,6 +21,7 @@ sealed interface WeatherScreenState {
         val model: WeatherUiModel,
         val lastUpdatedAtMillis: Long,
         val isRefreshing: Boolean = false,
+        val feedbackMessageResId: Int? = null,
     ) : WeatherScreenState
 
     data class Error(

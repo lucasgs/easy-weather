@@ -9,6 +9,9 @@
     <string name="weather_empty_benefit_privacy">No account setup required</string>
     <string name="weather_loading_title">Loading weather</string>
     <string name="weather_loading_message">Fetching the latest forecast for your current location.</string>
+    <string name="weather_refreshing_message">Refreshing the latest forecast…</string>
+    <string name="weather_retrying_message">Retrying weather request…</string>
+    <string name="weather_permission_requesting_message">Choose Allow in the system prompt to use your current location.</string>
     <string name="weather_error_title">Couldn’t load the weather</string>
     <string name="weather_error_network_message">Please check your connection and try again.</string>
     <string name="weather_error_location_unavailable_message">We couldn’t determine your current location. Try again in a moment.</string>

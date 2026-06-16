@@ -2,6 +2,7 @@ package com.dendron.easyweather.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dendron.easyweather.R
 import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.Weather
 import com.dendron.easyweather.domain.WeatherRepository
@@ -78,12 +79,31 @@ class WeatherListViewModel @Inject constructor(
     }
 
     fun selectManualLocation(location: SearchedLocation) {
-        fetchWeather(latitude = location.latitude, longitude = location.longitude)
+        fetchWeather(
+            latitude = location.latitude,
+            longitude = location.longitude,
+            feedbackMessageResId = R.string.weather_loading_message,
+        )
     }
 
     fun fetchData() {
+        loadCurrentLocationWeather(R.string.weather_loading_message)
+    }
+
+    fun refreshData() {
+        loadCurrentLocationWeather(R.string.weather_refreshing_message)
+    }
+
+    fun retryData() {
+        loadCurrentLocationWeather(R.string.weather_retrying_message)
+    }
+
+    private fun loadCurrentLocationWeather(feedbackMessageResId: Int) {
         val currentContent = _state.value as? WeatherScreenState.Content
-        _state.value = currentContent?.copy(isRefreshing = true) ?: WeatherScreenState.Loading
+        _state.value = currentContent?.copy(
+            isRefreshing = true,
+            feedbackMessageResId = feedbackMessageResId,
+        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
 
         viewModelScope.launch {
             when (val currentLocation = locationProvider.getCurrentLocation()) {
@@ -103,15 +123,23 @@ class WeatherListViewModel @Inject constructor(
                     fetchWeather(
                         latitude = currentLocation.data.latitude,
                         longitude = currentLocation.data.longitude,
+                        feedbackMessageResId = feedbackMessageResId,
                     )
                 }
             }
         }
     }
 
-    private fun fetchWeather(latitude: Double, longitude: Double) {
+    private fun fetchWeather(
+        latitude: Double,
+        longitude: Double,
+        feedbackMessageResId: Int,
+    ) {
         val currentContent = _state.value as? WeatherScreenState.Content
-        _state.value = currentContent?.copy(isRefreshing = true) ?: WeatherScreenState.Loading
+        _state.value = currentContent?.copy(
+            isRefreshing = true,
+            feedbackMessageResId = feedbackMessageResId,
+        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
 
         viewModelScope.launch {
             weatherRepository.getCurrentWeather(
@@ -131,8 +159,10 @@ class WeatherListViewModel @Inject constructor(
                     }
 
                     is Resource.Loading -> {
-                        _state.value = currentContent?.copy(isRefreshing = true)
-                            ?: WeatherScreenState.Loading
+                        _state.value = currentContent?.copy(
+                            isRefreshing = true,
+                            feedbackMessageResId = feedbackMessageResId,
+                        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
                     }
                 }
             }

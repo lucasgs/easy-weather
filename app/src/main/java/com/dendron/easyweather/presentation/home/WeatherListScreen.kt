@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -21,6 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -47,9 +53,11 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    var isRequestingPermission by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
+        isRequestingPermission = false
         if (permissions.values.all { it }) {
             viewModel.fetchData()
         } else {
@@ -67,8 +75,10 @@ fun HomeScreen(
 
     HomeScreenContent(
         state = state,
-        onRefresh = viewModel::fetchData,
+        onRefresh = viewModel::refreshData,
+        onRetry = viewModel::retryData,
         onRequestPermission = {
+            isRequestingPermission = true
             permissionLauncher.launch(locationPermissions)
         },
         onShowManualLocation = viewModel::showManualLocation,
@@ -78,6 +88,7 @@ fun HomeScreen(
         onManualLocationBack = viewModel::showEmptyState,
         onOpenAppSettings = context::openAppSettings,
         onOpenLocationSettings = context::openLocationSettings,
+        isRequestingPermission = isRequestingPermission,
         modifier = modifier,
     )
 }
@@ -87,6 +98,7 @@ fun HomeScreen(
 internal fun HomeScreenContent(
     state: WeatherScreenState,
     onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onRequestPermission: () -> Unit,
     onShowManualLocation: () -> Unit,
     onManualLocationQueryChange: (String) -> Unit,
@@ -95,6 +107,7 @@ internal fun HomeScreenContent(
     onManualLocationBack: () -> Unit,
     onOpenAppSettings: () -> Unit,
     onOpenLocationSettings: () -> Unit,
+    isRequestingPermission: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val palette = state.palette()
@@ -129,7 +142,7 @@ internal fun HomeScreenContent(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            WeatherScreenState.Loading -> LoadingWeatherSkeleton(
+            is WeatherScreenState.Loading -> LoadingWeatherSkeleton(
                 palette = palette,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -147,7 +160,7 @@ internal fun HomeScreenContent(
                 title = stringResource(R.string.weather_error_title),
                 message = stringResource(currentState.reason.messageResId),
                 primaryActionLabel = stringResource(R.string.weather_retry_action),
-                onPrimaryAction = onRefresh,
+                onPrimaryAction = onRetry,
                 modifier = Modifier.fillMaxSize(),
             )
 
@@ -169,8 +182,25 @@ internal fun HomeScreenContent(
                 primaryActionLabel = stringResource(R.string.weather_location_settings_action),
                 onPrimaryAction = onOpenLocationSettings,
                 secondaryActionLabel = stringResource(R.string.weather_retry_action),
-                onSecondaryAction = onRefresh,
+                onSecondaryAction = onRetry,
                 modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        val feedbackMessage = when {
+            isRequestingPermission -> stringResource(R.string.weather_permission_requesting_message)
+            state is WeatherScreenState.Loading -> state.feedbackMessageResId?.let { stringResource(it) }
+            state is WeatherScreenState.Content -> state.feedbackMessageResId?.let { stringResource(it) }
+            else -> null
+        }
+
+        if (feedbackMessage != null) {
+            FeedbackBanner(
+                message = feedbackMessage,
+                palette = palette,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = WeatherDimens.screenPadding),
             )
         }
     }
@@ -227,6 +257,26 @@ private fun WeatherContent(
             refreshing = isRefreshing,
             state = refreshState,
             modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+}
+
+@Composable
+private fun FeedbackBanner(
+    message: String,
+    palette: WeatherPalette,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = palette.cardTint.copy(alpha = 0.22f),
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.padding(horizontal = WeatherDimens.screenPadding),
+    ) {
+        Text(
+            text = message,
+            color = palette.primaryText,
+            style = MaterialTheme.typography.body2,
+            modifier = Modifier.padding(horizontal = WeatherDimens.largeSpacing, vertical = WeatherDimens.mediumSpacing),
         )
     }
 }
