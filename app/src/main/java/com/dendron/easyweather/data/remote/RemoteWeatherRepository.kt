@@ -1,9 +1,9 @@
 package com.dendron.easyweather.data.remote
 
-import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.data.remote.model.toDomain
-import com.dendron.easyweather.domain.Weather
+import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherRepository
+import com.dendron.easyweather.domain.WeatherResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
@@ -15,21 +15,20 @@ class RemoteWeatherRepository @Inject constructor(private val api: WeatherApi) :
     override fun getCurrentWeather(
         latitude: Double,
         longitude: Double,
-    ): Flow<Resource<Weather>> = flow {
+    ): Flow<WeatherResult> = flow {
+        emit(WeatherResult.Loading)
         try {
-            emit(Resource.Loading())
             val result = api.getCurrentWeather(
                 latitude = latitude,
                 longitude = longitude,
             ).toDomain()
-            emit(Resource.Success(result))
-
+            emit(WeatherResult.Success(result))
         } catch (e: HttpException) {
-            emit(Resource.Error(e.localizedMessage))
+            emit(WeatherResult.Failure(WeatherFailure.Network))
         } catch (e: IOException) {
-            emit(Resource.Error(e.localizedMessage))
+            emit(WeatherResult.Failure(WeatherFailure.Network))
         } catch (e: Exception) {
-            emit(Resource.Error(e.localizedMessage))
+            emit(WeatherResult.Failure(WeatherFailure.Unknown))
         }
     }
 }

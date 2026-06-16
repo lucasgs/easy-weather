@@ -4,7 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dendron.easyweather.R
 import com.dendron.easyweather.common.Resource
-import com.dendron.easyweather.domain.Weather
+import com.dendron.easyweather.domain.WeatherFailure
+import com.dendron.easyweather.domain.WeatherResult
 import com.dendron.easyweather.domain.location.LocationResult
 import com.dendron.easyweather.domain.location.SearchedLocation
 import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
@@ -143,18 +144,18 @@ class WeatherListViewModel @Inject constructor(
                 isRefresh = isRefresh,
             ).collect { result ->
                 when (result) {
-                    is Resource.Success -> {
+                    is WeatherResult.Success -> {
                         _state.value = WeatherScreenState.Content(
-                            model = weatherUiModelMapper.map(result.data),
+                            model = weatherUiModelMapper.map(result.weather),
                             lastUpdatedAtMillis = System.currentTimeMillis(),
                         )
                     }
 
-                    is Resource.Error -> {
-                        _state.value = WeatherScreenState.Error(result.toErrorReason())
+                    is WeatherResult.Failure -> {
+                        _state.value = WeatherScreenState.Error(result.error.toErrorReason())
                     }
 
-                    is Resource.Loading -> {
+                    WeatherResult.Loading -> {
                         showLoadingState(currentContent, feedbackMessageResId)
                     }
                 }
@@ -173,9 +174,7 @@ class WeatherListViewModel @Inject constructor(
     }
 }
 
-private fun Resource.Error<Weather>.toErrorReason(): ErrorReason =
-    if (message.isNullOrBlank()) {
-        ErrorReason.Unknown
-    } else {
-        ErrorReason.Network
-    }
+private fun WeatherFailure.toErrorReason(): ErrorReason = when (this) {
+    WeatherFailure.Network -> ErrorReason.Network
+    WeatherFailure.Unknown -> ErrorReason.Unknown
+}

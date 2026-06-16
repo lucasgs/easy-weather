@@ -2,12 +2,18 @@ package com.dendron.easyweather.data.remote
 
 import app.cash.turbine.test
 import com.dendron.easyweather.MainDispatcherRule
-import com.dendron.easyweather.common.Resource
-import com.dendron.easyweather.data.remote.model.*
-import com.dendron.easyweather.domain.Weather
+import com.dendron.easyweather.data.remote.model.CurrentWeather
+import com.dendron.easyweather.data.remote.model.Daily
+import com.dendron.easyweather.data.remote.model.DailyUnits
+import com.dendron.easyweather.data.remote.model.Hourly
+import com.dendron.easyweather.data.remote.model.HourlyUnits
+import com.dendron.easyweather.data.remote.model.WeatherDto
+import com.dendron.easyweather.data.remote.model.toDomain
+import com.dendron.easyweather.domain.WeatherFailure
+import com.dendron.easyweather.domain.WeatherResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -39,87 +45,69 @@ class RemoteWeatherRepositoryTest {
 
     @Test
     fun `getCurrentWeather should emit loading and success when API return success`() = runTest {
-
         val fakeWeatherDto = getFakeWeatherDto()
         val expectedWeather = fakeWeatherDto.toDomain()
-        val expectedLoading = Resource.Loading<Weather>()
-        val expectedSuccess = Resource.Success(data = expectedWeather)
 
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
                 longitude = long,
-            )
+            ),
         ).thenReturn(fakeWeatherDto)
 
         weatherRepository.getCurrentWeather(lat, long).test {
-            assertEquals(expectedLoading, awaitItem())
-            assertEquals(expectedSuccess, awaitItem())
+            assertEquals(WeatherResult.Loading, awaitItem())
+            assertEquals(WeatherResult.Success(expectedWeather), awaitItem())
             awaitComplete()
         }
     }
 
     @Test
-    fun `getCurrentWeather should return error when API returns IOException`() = runTest {
-
-        val expectedErrorMessage = "Error"
-        val expectedLoading = Resource.Loading<Weather>()
-        val expectedError = Resource.Error<Weather>(expectedErrorMessage)
-
+    fun `getCurrentWeather should return network failure when API returns IOException`() = runTest {
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
                 longitude = long,
-            )
+            ),
         ).thenAnswer {
             throw IOException()
         }
 
         weatherRepository.getCurrentWeather(lat, long).test {
-            assertEquals(expectedLoading, awaitItem())
-            assertEquals(expectedError, awaitItem())
+            assertEquals(WeatherResult.Loading, awaitItem())
+            assertEquals(WeatherResult.Failure(WeatherFailure.Network), awaitItem())
             awaitComplete()
         }
     }
 
     @Test
-    fun `getCurrentWeather should return error when API returns httpException`() = runTest {
-
-        val expectedErrorMessage = "Error"
-        val expectedLoading = Resource.Loading<Weather>()
-        val expectedError = Resource.Error<Weather>(expectedErrorMessage)
-
+    fun `getCurrentWeather should return network failure when API returns httpException`() = runTest {
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
                 longitude = long,
-            )
+            ),
         ).thenThrow(HttpException::class.java)
 
         weatherRepository.getCurrentWeather(lat, long).test {
-            assertEquals(expectedLoading, awaitItem())
-            assertEquals(expectedError, awaitItem())
+            assertEquals(WeatherResult.Loading, awaitItem())
+            assertEquals(WeatherResult.Failure(WeatherFailure.Network), awaitItem())
             awaitComplete()
         }
     }
 
     @Test
-    fun `getCurrentWeather should return error when API returns any type of exception`() = runTest {
-
-        val expectedErrorMessage = "Error"
-        val expectedLoading = Resource.Loading<Weather>()
-        val expectedError = Resource.Error<Weather>(expectedErrorMessage)
-
+    fun `getCurrentWeather should return unknown failure when API returns any type of exception`() = runTest {
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
                 longitude = long,
-            )
-        ).thenAnswer { throw Exception(expectedErrorMessage) }
+            ),
+        ).thenAnswer { throw Exception("Error") }
 
         weatherRepository.getCurrentWeather(lat, long).test {
-            assertEquals(expectedLoading, awaitItem())
-            assertEquals(expectedError, awaitItem())
+            assertEquals(WeatherResult.Loading, awaitItem())
+            assertEquals(WeatherResult.Failure(WeatherFailure.Unknown), awaitItem())
             awaitComplete()
         }
     }

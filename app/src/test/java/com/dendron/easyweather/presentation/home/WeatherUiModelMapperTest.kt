@@ -41,6 +41,7 @@ class WeatherUiModelMapperTest {
                     DailyForecastUiModel(dayLabel = "Mon", rangeText = "3.0° / 9.0°"),
                 ),
                 weatherIcon = R.drawable.cloudy,
+                palette = weatherPaletteForCode(1),
             ),
             result,
         )

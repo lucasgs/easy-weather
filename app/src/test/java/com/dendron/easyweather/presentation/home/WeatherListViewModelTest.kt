@@ -3,16 +3,22 @@ package com.dendron.easyweather.presentation.home
 import app.cash.turbine.test
 import com.dendron.easyweather.MainDispatcherRule
 import com.dendron.easyweather.R
-import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.DailyForecast
 import com.dendron.easyweather.domain.HourlyForecast
 import com.dendron.easyweather.domain.Weather
+import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherRepository
+import com.dendron.easyweather.domain.WeatherResult
 import com.dendron.easyweather.domain.WeatherUnits
 import com.dendron.easyweather.domain.location.LocationData
 import com.dendron.easyweather.domain.location.LocationProvider
 import com.dendron.easyweather.domain.location.LocationResult
 import com.dendron.easyweather.domain.location.LocationSearchRepository
+import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
+import com.dendron.easyweather.domain.usecase.GetCurrentWeatherUseCase
+import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
+import com.dendron.easyweather.domain.usecase.RefreshWeatherUseCase
+import com.dendron.easyweather.domain.usecase.SearchLocationsUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
@@ -33,10 +39,10 @@ class WeatherListViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Mock
-    private lateinit var weatherRepository: WeatherRepository
+    private lateinit var locationProvider: LocationProvider
 
     @Mock
-    private lateinit var locationProvider: LocationProvider
+    private lateinit var weatherRepository: WeatherRepository
 
     @Mock
     private lateinit var locationSearchRepository: LocationSearchRepository
@@ -52,9 +58,12 @@ class WeatherListViewModelTest {
             windDirectionMapper = WindDirectionMapper(),
         )
         viewModel = WeatherListViewModel(
-            weatherRepository = weatherRepository,
-            locationProvider = locationProvider,
-            locationSearchRepository = locationSearchRepository,
+            getCurrentLocationUseCase = GetCurrentLocationUseCase(locationProvider),
+            loadWeatherForCoordinatesUseCase = LoadWeatherForCoordinatesUseCase(
+                getCurrentWeatherUseCase = GetCurrentWeatherUseCase(weatherRepository),
+                refreshWeatherUseCase = RefreshWeatherUseCase(weatherRepository),
+            ),
+            searchLocationsUseCase = SearchLocationsUseCase(locationSearchRepository),
             weatherUiModelMapper = weatherUiModelMapper,
         )
     }
@@ -67,8 +76,8 @@ class WeatherListViewModelTest {
 
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
             flow {
-                emit(Resource.Loading())
-                emit(Resource.Success(data = fakeWeather))
+                emit(WeatherResult.Loading)
+                emit(WeatherResult.Success(fakeWeather))
             },
         )
 
@@ -77,7 +86,7 @@ class WeatherListViewModelTest {
 
             viewModel.fetchData()
 
-            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
             val content = awaitItem() as WeatherScreenState.Content
             assertEquals(fakeWeatherUiModel, content.model)
         }
@@ -91,8 +100,8 @@ class WeatherListViewModelTest {
 
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
             flow {
-                emit(Resource.Loading())
-                emit(Resource.Error(message = "Error"))
+                emit(WeatherResult.Loading)
+                emit(WeatherResult.Failure(WeatherFailure.Network))
             },
         )
 
@@ -101,7 +110,7 @@ class WeatherListViewModelTest {
 
             viewModel.fetchData()
 
-            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
             assertEquals(
                 WeatherScreenState.Error(ErrorReason.Network),
                 awaitItem(),
@@ -118,7 +127,7 @@ class WeatherListViewModelTest {
 
             viewModel.fetchData()
 
-            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
             assertEquals(WeatherScreenState.PermissionRequired, awaitItem())
         }
     }
@@ -132,7 +141,7 @@ class WeatherListViewModelTest {
 
             viewModel.fetchData()
 
-            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
             assertEquals(WeatherScreenState.LocationDisabled, awaitItem())
         }
     }
@@ -146,7 +155,7 @@ class WeatherListViewModelTest {
 
             viewModel.fetchData()
 
-            assertEquals(WeatherScreenState.Loading, awaitItem())
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
             assertEquals(
                 WeatherScreenState.Error(ErrorReason.LocationUnavailable),
                 awaitItem(),
@@ -176,6 +185,7 @@ class WeatherListViewModelTest {
                 DailyForecastUiModel(dayLabel = "Sun", rangeText = "2.0° / 8.0°"),
             ),
             weatherIcon = R.drawable.cloudy,
+            palette = weatherPaletteForCode(1),
         )
 
         val fakeWeather = Weather(
