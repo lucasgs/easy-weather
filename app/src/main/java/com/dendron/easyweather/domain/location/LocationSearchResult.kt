@@ -7,5 +7,6 @@ sealed interface LocationSearchResult {
 
 sealed interface LocationSearchFailure {
     data object Network : LocationSearchFailure
+    data object Timeout : LocationSearchFailure
     data object Unknown : LocationSearchFailure
 }

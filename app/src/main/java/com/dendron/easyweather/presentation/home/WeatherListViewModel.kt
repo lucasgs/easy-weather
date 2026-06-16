@@ -190,11 +190,17 @@ class WeatherListViewModel @Inject constructor(
 }
 
 private fun WeatherFailure.toErrorReason(): ErrorReason = when (this) {
-    WeatherFailure.Network -> ErrorReason.Network
+    WeatherFailure.Network,
+    WeatherFailure.Timeout,
+    -> ErrorReason.Network
+
     WeatherFailure.Unknown -> ErrorReason.Unknown
 }
 
 private fun LocationSearchFailure.toErrorMessage(): String = when (this) {
-    LocationSearchFailure.Network -> "Could not search for that city."
+    LocationSearchFailure.Network,
+    LocationSearchFailure.Timeout,
+    -> "Could not search for that city."
+
     LocationSearchFailure.Unknown -> "Something went wrong while searching."
 }

@@ -8,5 +8,6 @@ sealed interface WeatherResult {
 
 sealed interface WeatherFailure {
     data object Network : WeatherFailure
+    data object Timeout : WeatherFailure
     data object Unknown : WeatherFailure
 }

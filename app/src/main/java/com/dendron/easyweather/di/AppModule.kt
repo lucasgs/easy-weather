@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.dendron.easyweather.data.location.DefaultLocationProvider
 import com.dendron.easyweather.data.remote.LocationSearchApi
+import com.dendron.easyweather.data.remote.NetworkConfig
 import com.dendron.easyweather.data.remote.RemoteLocationSearchRepository
 import com.dendron.easyweather.data.remote.RemoteWeatherRepository
 import com.dendron.easyweather.data.remote.WeatherApi
@@ -18,8 +19,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -27,18 +30,33 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideWeatherApi(): WeatherApi {
+    fun provideLoggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
+        level = if (NetworkConfig.ENABLE_HTTP_LOGGING) {
+            HttpLoggingInterceptor.Level.BASIC
+        } else {
+            HttpLoggingInterceptor.Level.NONE
+        }
+    }
 
-        val moviesClient = OkHttpClient().newBuilder()
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient =
+        OkHttpClient.Builder()
+            .connectTimeout(NetworkConfig.CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(NetworkConfig.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(NetworkConfig.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .addInterceptor(loggingInterceptor)
             .build()
 
-        return Retrofit.Builder()
-            .client(moviesClient)
-            .baseUrl("https://api.open-meteo.com/v1/")
+    @Provides
+    @Singleton
+    fun provideWeatherApi(okHttpClient: OkHttpClient): WeatherApi =
+        Retrofit.Builder()
+            .client(okHttpClient)
+            .baseUrl(NetworkConfig.WEATHER_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(WeatherApi::class.java)
-    }
 
     @Provides
     @Singleton
@@ -48,8 +66,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLocationSearchApi(): LocationSearchApi = Retrofit.Builder()
-        .baseUrl("https://geocoding-api.open-meteo.com/v1/")
+    fun provideLocationSearchApi(okHttpClient: OkHttpClient): LocationSearchApi = Retrofit.Builder()
+        .client(okHttpClient)
+        .baseUrl(NetworkConfig.GEOCODING_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(LocationSearchApi::class.java)
