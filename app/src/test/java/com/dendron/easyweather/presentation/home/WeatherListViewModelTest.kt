@@ -10,9 +10,10 @@ import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherRepository
 import com.dendron.easyweather.domain.WeatherResult
 import com.dendron.easyweather.domain.WeatherUnits
+import com.dendron.easyweather.domain.location.CurrentLocationFailure
+import com.dendron.easyweather.domain.location.CurrentLocationResult
 import com.dendron.easyweather.domain.location.LocationData
 import com.dendron.easyweather.domain.location.LocationProvider
-import com.dendron.easyweather.domain.location.LocationResult
 import com.dendron.easyweather.domain.location.LocationSearchRepository
 import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
 import com.dendron.easyweather.domain.usecase.GetCurrentWeatherUseCase
@@ -71,7 +72,7 @@ class WeatherListViewModelTest {
     @Test
     fun `fetchData should emit loading then content when location and weather are available`() = runTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
-            LocationResult.Success(LocationData(LAT, LONG)),
+            CurrentLocationResult.Success(LocationData(LAT, LONG)),
         )
 
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
@@ -95,7 +96,7 @@ class WeatherListViewModelTest {
     @Test
     fun `fetchData should emit loading then error when repository fails`() = runTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
-            LocationResult.Success(LocationData(LAT, LONG)),
+            CurrentLocationResult.Success(LocationData(LAT, LONG)),
         )
 
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
@@ -120,7 +121,9 @@ class WeatherListViewModelTest {
 
     @Test
     fun `fetchData should emit permission required when location permission is missing`() = runTest {
-        whenever(locationProvider.getCurrentLocation()).thenReturn(LocationResult.PermissionDenied)
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Failure(CurrentLocationFailure.PermissionDenied),
+        )
 
         viewModel.state.test {
             assertEquals(WeatherScreenState.Empty, awaitItem())
@@ -134,7 +137,9 @@ class WeatherListViewModelTest {
 
     @Test
     fun `fetchData should emit location disabled when providers are off`() = runTest {
-        whenever(locationProvider.getCurrentLocation()).thenReturn(LocationResult.LocationDisabled)
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Failure(CurrentLocationFailure.LocationDisabled),
+        )
 
         viewModel.state.test {
             assertEquals(WeatherScreenState.Empty, awaitItem())
@@ -148,7 +153,9 @@ class WeatherListViewModelTest {
 
     @Test
     fun `fetchData should emit location unavailable error when no location is returned`() = runTest {
-        whenever(locationProvider.getCurrentLocation()).thenReturn(LocationResult.Unavailable)
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Failure(CurrentLocationFailure.Unavailable),
+        )
 
         viewModel.state.test {
             assertEquals(WeatherScreenState.Empty, awaitItem())

@@ -5,7 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.dendron.easyweather.R
 import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherResult
-import com.dendron.easyweather.domain.location.LocationResult
+import com.dendron.easyweather.domain.location.CurrentLocationFailure
+import com.dendron.easyweather.domain.location.CurrentLocationResult
 import com.dendron.easyweather.domain.location.LocationSearchFailure
 import com.dendron.easyweather.domain.location.LocationSearchResult
 import com.dendron.easyweather.domain.location.SearchedLocation
@@ -104,24 +105,28 @@ class WeatherListViewModel @Inject constructor(
 
         viewModelScope.launch {
             when (val currentLocation = getCurrentLocationUseCase()) {
-                LocationResult.PermissionDenied -> {
-                    _state.value = WeatherScreenState.PermissionRequired
-                }
-
-                LocationResult.LocationDisabled -> {
-                    _state.value = WeatherScreenState.LocationDisabled
-                }
-
-                LocationResult.Unavailable -> {
-                    _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
-                }
-
-                is LocationResult.Success -> {
+                is CurrentLocationResult.Success -> {
                     fetchWeather(
                         latitude = currentLocation.data.latitude,
                         longitude = currentLocation.data.longitude,
                         feedbackMessageResId = feedbackMessageResId,
                     )
+                }
+
+                is CurrentLocationResult.Failure -> {
+                    when (currentLocation.error) {
+                        CurrentLocationFailure.PermissionDenied -> {
+                            _state.value = WeatherScreenState.PermissionRequired
+                        }
+
+                        CurrentLocationFailure.LocationDisabled -> {
+                            _state.value = WeatherScreenState.LocationDisabled
+                        }
+
+                        CurrentLocationFailure.Unavailable -> {
+                            _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
+                        }
+                    }
                 }
             }
         }
