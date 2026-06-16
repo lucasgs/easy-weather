@@ -3,10 +3,11 @@ package com.dendron.easyweather.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dendron.easyweather.R
-import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherResult
 import com.dendron.easyweather.domain.location.LocationResult
+import com.dendron.easyweather.domain.location.LocationSearchFailure
+import com.dendron.easyweather.domain.location.LocationSearchResult
 import com.dendron.easyweather.domain.location.SearchedLocation
 import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
 import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
@@ -57,24 +58,22 @@ class WeatherListViewModel @Inject constructor(
         _state.value = current.copy(isSearching = true, errorMessage = null)
         viewModelScope.launch {
             when (val result = searchLocationsUseCase(query)) {
-                is Resource.Success -> {
+                is LocationSearchResult.Success -> {
                     _state.value = current.copy(
                         query = query,
                         isSearching = false,
-                        results = result.data,
-                        errorMessage = if (result.data.isEmpty()) "No matching cities found." else null,
+                        results = result.locations,
+                        errorMessage = if (result.locations.isEmpty()) "No matching cities found." else null,
                     )
                 }
 
-                is Resource.Error -> {
+                is LocationSearchResult.Failure -> {
                     _state.value = current.copy(
                         query = query,
                         isSearching = false,
-                        errorMessage = result.message ?: "Could not search for that city.",
+                        errorMessage = result.error.toErrorMessage(),
                     )
                 }
-
-                is Resource.Loading -> Unit
             }
         }
     }
@@ -177,4 +176,9 @@ class WeatherListViewModel @Inject constructor(
 private fun WeatherFailure.toErrorReason(): ErrorReason = when (this) {
     WeatherFailure.Network -> ErrorReason.Network
     WeatherFailure.Unknown -> ErrorReason.Unknown
+}
+
+private fun LocationSearchFailure.toErrorMessage(): String = when (this) {
+    LocationSearchFailure.Network -> "Could not search for that city."
+    LocationSearchFailure.Unknown -> "Something went wrong while searching."
 }
