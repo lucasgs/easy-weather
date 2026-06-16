@@ -5,11 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.dendron.easyweather.R
 import com.dendron.easyweather.common.Resource
 import com.dendron.easyweather.domain.Weather
-import com.dendron.easyweather.domain.WeatherRepository
-import com.dendron.easyweather.domain.location.LocationProvider
 import com.dendron.easyweather.domain.location.LocationResult
-import com.dendron.easyweather.domain.location.LocationSearchRepository
 import com.dendron.easyweather.domain.location.SearchedLocation
+import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
+import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
+import com.dendron.easyweather.domain.usecase.SearchLocationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,9 +19,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherListViewModel @Inject constructor(
-    private val weatherRepository: WeatherRepository,
-    private val locationProvider: LocationProvider,
-    private val locationSearchRepository: LocationSearchRepository,
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val loadWeatherForCoordinatesUseCase: LoadWeatherForCoordinatesUseCase,
+    private val searchLocationsUseCase: SearchLocationsUseCase,
     private val weatherUiModelMapper: WeatherUiModelMapper,
 ) : ViewModel() {
 
@@ -55,7 +55,7 @@ class WeatherListViewModel @Inject constructor(
 
         _state.value = current.copy(isSearching = true, errorMessage = null)
         viewModelScope.launch {
-            when (val result = locationSearchRepository.searchLocations(query)) {
+            when (val result = searchLocationsUseCase(query)) {
                 is Resource.Success -> {
                     _state.value = current.copy(
                         query = query,
@@ -100,13 +100,10 @@ class WeatherListViewModel @Inject constructor(
 
     private fun loadCurrentLocationWeather(feedbackMessageResId: Int) {
         val currentContent = _state.value as? WeatherScreenState.Content
-        _state.value = currentContent?.copy(
-            isRefreshing = true,
-            feedbackMessageResId = feedbackMessageResId,
-        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
+        showLoadingState(currentContent, feedbackMessageResId)
 
         viewModelScope.launch {
-            when (val currentLocation = locationProvider.getCurrentLocation()) {
+            when (val currentLocation = getCurrentLocationUseCase()) {
                 LocationResult.PermissionDenied -> {
                     _state.value = WeatherScreenState.PermissionRequired
                 }
@@ -136,15 +133,14 @@ class WeatherListViewModel @Inject constructor(
         feedbackMessageResId: Int,
     ) {
         val currentContent = _state.value as? WeatherScreenState.Content
-        _state.value = currentContent?.copy(
-            isRefreshing = true,
-            feedbackMessageResId = feedbackMessageResId,
-        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
+        val isRefresh = currentContent != null || feedbackMessageResId != R.string.weather_loading_message
+        showLoadingState(currentContent, feedbackMessageResId)
 
         viewModelScope.launch {
-            weatherRepository.getCurrentWeather(
+            loadWeatherForCoordinatesUseCase(
                 latitude = latitude,
                 longitude = longitude,
+                isRefresh = isRefresh,
             ).collect { result ->
                 when (result) {
                     is Resource.Success -> {
@@ -159,14 +155,21 @@ class WeatherListViewModel @Inject constructor(
                     }
 
                     is Resource.Loading -> {
-                        _state.value = currentContent?.copy(
-                            isRefreshing = true,
-                            feedbackMessageResId = feedbackMessageResId,
-                        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
+                        showLoadingState(currentContent, feedbackMessageResId)
                     }
                 }
             }
         }
+    }
+
+    private fun showLoadingState(
+        currentContent: WeatherScreenState.Content?,
+        feedbackMessageResId: Int,
+    ) {
+        _state.value = currentContent?.copy(
+            isRefreshing = true,
+            feedbackMessageResId = feedbackMessageResId,
+        ) ?: WeatherScreenState.Loading(feedbackMessageResId)
     }
 }
 
