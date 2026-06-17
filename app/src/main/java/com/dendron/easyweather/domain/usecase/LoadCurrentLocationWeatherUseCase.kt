@@ -21,7 +21,14 @@ class LoadCurrentLocationWeatherUseCase @Inject constructor(
                 ).collect { result ->
                     when (result) {
                         WeatherResult.Loading -> emit(LoadCurrentLocationWeatherResult.Loading)
-                        is WeatherResult.Success -> emit(LoadCurrentLocationWeatherResult.Success(result.weather))
+                        is WeatherResult.Success -> emit(
+                            LoadCurrentLocationWeatherResult.Success(
+                                weather = result.weather,
+                                lastUpdatedAtMillis = result.lastUpdatedAtMillis,
+                                isStale = result.isStale,
+                                isFromCache = result.isFromCache,
+                            ),
+                        )
                         is WeatherResult.Failure -> emit(LoadCurrentLocationWeatherResult.WeatherFailureResult(result.error))
                     }
                 }

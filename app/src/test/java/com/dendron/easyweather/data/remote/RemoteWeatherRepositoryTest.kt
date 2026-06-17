@@ -3,6 +3,7 @@ package com.dendron.easyweather.data.remote
 import app.cash.turbine.test
 import com.dendron.easyweather.MainDispatcherRule
 import com.dendron.easyweather.data.local.WeatherCacheDao
+import com.dendron.easyweather.data.local.model.toCachedEntity
 import com.dendron.easyweather.data.remote.model.CurrentWeather
 import com.dendron.easyweather.data.remote.model.Daily
 import com.dendron.easyweather.data.remote.model.DailyUnits
@@ -21,7 +22,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import org.mockito.kotlin.check
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import retrofit2.HttpException
@@ -53,6 +56,7 @@ class RemoteWeatherRepositoryTest {
     fun `getCurrentWeather should emit loading and success when API return success`() = runTest {
         val fakeWeatherDto = getFakeWeatherDto()
         val expectedWeather = fakeWeatherDto.toDomain()
+        whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
 
         whenever(
             api.getCurrentWeather(
@@ -63,7 +67,11 @@ class RemoteWeatherRepositoryTest {
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
-            assertEquals(WeatherResult.Success(expectedWeather), awaitItem())
+            val success = awaitItem() as WeatherResult.Success
+            assertEquals(expectedWeather, success.weather)
+            assertEquals(false, success.isFromCache)
+            assertEquals(false, success.isStale)
+            assert(success.lastUpdatedAtMillis > 0L)
             awaitComplete()
         }
 
@@ -79,6 +87,7 @@ class RemoteWeatherRepositoryTest {
 
     @Test
     fun `getCurrentWeather should return network failure when API returns IOException`() = runTest {
+        whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
@@ -97,6 +106,7 @@ class RemoteWeatherRepositoryTest {
 
     @Test
     fun `getCurrentWeather should return network failure when API returns httpException`() = runTest {
+        whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
@@ -113,6 +123,7 @@ class RemoteWeatherRepositoryTest {
 
     @Test
     fun `getCurrentWeather should return unknown failure when API returns any type of exception`() = runTest {
+        whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
         whenever(
             api.getCurrentWeather(
                 latitude = lat,
@@ -125,6 +136,62 @@ class RemoteWeatherRepositoryTest {
             assertEquals(WeatherResult.Failure(WeatherFailure.Unknown), awaitItem())
             awaitComplete()
         }
+    }
+
+    @Test
+    fun `getCurrentWeather should emit cached weather before refreshed weather when cache exists`() = runTest {
+        val fakeWeatherDto = getFakeWeatherDto()
+        val expectedWeather = fakeWeatherDto.toDomain()
+        val cachedAtMillis = 1234L
+        whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(
+            expectedWeather.toCachedEntity(lat, long, cachedAtMillis),
+        )
+        whenever(api.getCurrentWeather(latitude = lat, longitude = long)).thenReturn(fakeWeatherDto)
+
+        weatherRepository.getCurrentWeather(lat, long).test {
+            assertEquals(WeatherResult.Loading, awaitItem())
+
+            val cached = awaitItem() as WeatherResult.Success
+            assertEquals(expectedWeather, cached.weather)
+            assertEquals(true, cached.isFromCache)
+            assertEquals(false, cached.isStale)
+            assertEquals(cachedAtMillis, cached.lastUpdatedAtMillis)
+
+            val refreshed = awaitItem() as WeatherResult.Success
+            assertEquals(expectedWeather, refreshed.weather)
+            assertEquals(false, refreshed.isFromCache)
+            assertEquals(false, refreshed.isStale)
+            assert(refreshed.lastUpdatedAtMillis >= cachedAtMillis)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `getCurrentWeather should emit stale cached weather when refresh fails`() = runTest {
+        val fakeWeatherDto = getFakeWeatherDto()
+        val expectedWeather = fakeWeatherDto.toDomain()
+        val cachedAtMillis = 1234L
+        whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(
+            expectedWeather.toCachedEntity(lat, long, cachedAtMillis),
+        )
+        whenever(api.getCurrentWeather(latitude = lat, longitude = long)).thenAnswer { throw IOException() }
+
+        weatherRepository.getCurrentWeather(lat, long).test {
+            assertEquals(WeatherResult.Loading, awaitItem())
+
+            val cached = awaitItem() as WeatherResult.Success
+            assertEquals(true, cached.isFromCache)
+            assertEquals(false, cached.isStale)
+
+            val stale = awaitItem() as WeatherResult.Success
+            assertEquals(expectedWeather, stale.weather)
+            assertEquals(true, stale.isFromCache)
+            assertEquals(true, stale.isStale)
+            assertEquals(cachedAtMillis, stale.lastUpdatedAtMillis)
+            awaitComplete()
+        }
+
+        verify(weatherCacheDao, never()).upsert(any())
     }
 
     private fun getFakeWeatherDto() = WeatherDto(

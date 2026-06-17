@@ -6,7 +6,12 @@ import com.dendron.easyweather.domain.location.CurrentLocationFailure
 
 sealed interface LoadCurrentLocationWeatherResult {
     data object Loading : LoadCurrentLocationWeatherResult
-    data class Success(val weather: Weather) : LoadCurrentLocationWeatherResult
+    data class Success(
+        val weather: Weather,
+        val lastUpdatedAtMillis: Long,
+        val isStale: Boolean = false,
+        val isFromCache: Boolean = false,
+    ) : LoadCurrentLocationWeatherResult
     data class LocationFailure(val error: CurrentLocationFailure) : LoadCurrentLocationWeatherResult
     data class WeatherFailureResult(val error: WeatherFailure) : LoadCurrentLocationWeatherResult
 }

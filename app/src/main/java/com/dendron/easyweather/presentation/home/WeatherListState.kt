@@ -22,6 +22,7 @@ sealed interface WeatherScreenState {
         val lastUpdatedAtMillis: Long,
         val isRefreshing: Boolean = false,
         val feedbackMessageResId: Int? = null,
+        val isStale: Boolean = false,
     ) : WeatherScreenState
 
     data class Error(

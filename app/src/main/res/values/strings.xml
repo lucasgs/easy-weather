@@ -11,6 +11,8 @@
     <string name="weather_loading_message">Fetching the latest forecast for your current location.</string>
     <string name="weather_refreshing_message">Refreshing the latest forecast…</string>
     <string name="weather_retrying_message">Retrying weather request…</string>
+    <string name="weather_cached_refreshing_message">Showing saved weather while refreshing.</string>
+    <string name="weather_cached_stale_message">Showing saved weather. It may be out of date.</string>
     <string name="weather_permission_requesting_message">Choose Allow in the system prompt to use your current location.</string>
     <string name="weather_error_title">Couldn’t load the weather</string>
     <string name="weather_error_network_message">Please check your connection and try again.</string>

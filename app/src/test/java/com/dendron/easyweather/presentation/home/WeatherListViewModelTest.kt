@@ -83,7 +83,12 @@ class WeatherListViewModelTest {
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
             flow {
                 emit(WeatherResult.Loading)
-                emit(WeatherResult.Success(fakeWeather))
+                emit(
+                    WeatherResult.Success(
+                        weather = fakeWeather,
+                        lastUpdatedAtMillis = LAST_UPDATED_AT_MILLIS,
+                    ),
+                )
             },
         )
 
@@ -95,6 +100,8 @@ class WeatherListViewModelTest {
             assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
             val content = awaitItem() as WeatherScreenState.Content
             assertEquals(fakeWeatherUiModel, content.model)
+            assertEquals(LAST_UPDATED_AT_MILLIS, content.lastUpdatedAtMillis)
+            assertEquals(false, content.isStale)
         }
     }
 
@@ -121,6 +128,77 @@ class WeatherListViewModelTest {
                 WeatherScreenState.Error(ErrorReason.Network),
                 awaitItem(),
             )
+        }
+    }
+
+    @Test
+    fun `fetchData should show cached weather message when cached data is emitted`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Success(LocationData(LAT, LONG)),
+        )
+
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
+            flow {
+                emit(WeatherResult.Loading)
+                emit(
+                    WeatherResult.Success(
+                        weather = fakeWeather,
+                        lastUpdatedAtMillis = LAST_UPDATED_AT_MILLIS,
+                        isFromCache = true,
+                    ),
+                )
+            },
+        )
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
+            val content = awaitItem() as WeatherScreenState.Content
+            assertEquals(R.string.weather_cached_refreshing_message, content.feedbackMessageResId)
+            assertEquals(false, content.isStale)
+        }
+    }
+
+    @Test
+    fun `fetchData should mark cached weather as stale when refresh fails after cache`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Success(LocationData(LAT, LONG)),
+        )
+
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
+            flow {
+                emit(WeatherResult.Loading)
+                emit(
+                    WeatherResult.Success(
+                        weather = fakeWeather,
+                        lastUpdatedAtMillis = LAST_UPDATED_AT_MILLIS,
+                        isFromCache = true,
+                    ),
+                )
+                emit(
+                    WeatherResult.Success(
+                        weather = fakeWeather,
+                        lastUpdatedAtMillis = LAST_UPDATED_AT_MILLIS,
+                        isFromCache = true,
+                        isStale = true,
+                    ),
+                )
+            },
+        )
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
+            val content = awaitItem() as WeatherScreenState.Content
+            val staleContent = if (content.isStale) content else awaitItem() as WeatherScreenState.Content
+            assertEquals(true, staleContent.isStale)
+            assertEquals(R.string.weather_cached_stale_message, staleContent.feedbackMessageResId)
         }
     }
 
@@ -178,6 +256,7 @@ class WeatherListViewModelTest {
     companion object {
         const val LAT = 1.0
         const val LONG = 1.0
+        const val LAST_UPDATED_AT_MILLIS = 1_717_000_000_000L
 
         val fakeWeatherUiModel = WeatherUiModel(
             locationName = "New York",

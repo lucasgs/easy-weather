@@ -113,9 +113,11 @@ class WeatherListViewModel @Inject constructor(
                     }
 
                     is LoadCurrentLocationWeatherResult.Success -> {
-                        _state.value = WeatherScreenState.Content(
-                            model = weatherUiModelMapper.map(result.weather),
-                            lastUpdatedAtMillis = System.currentTimeMillis(),
+                        showWeatherContent(
+                            weather = result.weather,
+                            lastUpdatedAtMillis = result.lastUpdatedAtMillis,
+                            isStale = result.isStale,
+                            isFromCache = result.isFromCache,
                         )
                     }
 
@@ -160,9 +162,11 @@ class WeatherListViewModel @Inject constructor(
             ).collect { result ->
                 when (result) {
                     is WeatherResult.Success -> {
-                        _state.value = WeatherScreenState.Content(
-                            model = weatherUiModelMapper.map(result.weather),
-                            lastUpdatedAtMillis = System.currentTimeMillis(),
+                        showWeatherContent(
+                            weather = result.weather,
+                            lastUpdatedAtMillis = result.lastUpdatedAtMillis,
+                            isStale = result.isStale,
+                            isFromCache = result.isFromCache,
                         )
                     }
 
@@ -186,6 +190,24 @@ class WeatherListViewModel @Inject constructor(
             isRefreshing = true,
             feedbackMessageResId = feedbackMessageResId,
         ) ?: WeatherScreenState.Loading(feedbackMessageResId)
+    }
+
+    private fun showWeatherContent(
+        weather: com.dendron.easyweather.domain.Weather,
+        lastUpdatedAtMillis: Long,
+        isStale: Boolean,
+        isFromCache: Boolean,
+    ) {
+        _state.value = WeatherScreenState.Content(
+            model = weatherUiModelMapper.map(weather),
+            lastUpdatedAtMillis = lastUpdatedAtMillis,
+            feedbackMessageResId = when {
+                isStale -> R.string.weather_cached_stale_message
+                isFromCache -> R.string.weather_cached_refreshing_message
+                else -> null
+            },
+            isStale = isStale,
+        )
     }
 }
 
