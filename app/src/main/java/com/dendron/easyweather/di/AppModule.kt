@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.dendron.easyweather.data.local.WeatherCacheDao
 import com.dendron.easyweather.data.local.WeatherDatabase
 import com.dendron.easyweather.data.location.DefaultLocationProvider
+import com.dendron.easyweather.data.preferences.DataStoreWeatherPreferencesRepository
 import com.dendron.easyweather.data.remote.LocationSearchApi
 import com.dendron.easyweather.data.remote.NetworkConfig
 import com.dendron.easyweather.data.remote.RemoteLocationSearchRepository
@@ -14,6 +15,7 @@ import com.dendron.easyweather.data.remote.WeatherApi
 import com.dendron.easyweather.domain.WeatherRepository
 import com.dendron.easyweather.domain.location.LocationProvider
 import com.dendron.easyweather.domain.location.LocationSearchRepository
+import com.dendron.easyweather.domain.preferences.WeatherPreferencesRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dagger.Module
@@ -76,11 +78,18 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideWeatherPreferencesRepository(
+        @ApplicationContext appContext: Context,
+    ): WeatherPreferencesRepository = DataStoreWeatherPreferencesRepository(appContext)
+
+    @Provides
+    @Singleton
     fun provideWeatherRepository(
         api: WeatherApi,
         weatherCacheDao: WeatherCacheDao,
+        weatherPreferencesRepository: WeatherPreferencesRepository,
     ): WeatherRepository {
-        return RemoteWeatherRepository(api, weatherCacheDao)
+        return RemoteWeatherRepository(api, weatherCacheDao, weatherPreferencesRepository)
     }
 
     @Provides

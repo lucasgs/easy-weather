@@ -24,6 +24,7 @@ class LoadCurrentLocationWeatherUseCase @Inject constructor(
                         is WeatherResult.Success -> emit(
                             LoadCurrentLocationWeatherResult.Success(
                                 weather = result.weather,
+                                locationData = currentLocation.data,
                                 lastUpdatedAtMillis = result.lastUpdatedAtMillis,
                                 isStale = result.isStale,
                                 isFromCache = result.isFromCache,

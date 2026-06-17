@@ -66,11 +66,7 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (context.hasLocationPermissions()) {
-            viewModel.fetchData()
-        } else {
-            viewModel.showEmptyState()
-        }
+        viewModel.fetchStartupData(context.hasLocationPermissions())
     }
 
     HomeScreenContent(

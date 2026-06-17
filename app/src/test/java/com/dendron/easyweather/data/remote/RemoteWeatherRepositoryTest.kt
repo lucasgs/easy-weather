@@ -13,9 +13,12 @@ import com.dendron.easyweather.data.remote.model.WeatherDto
 import com.dendron.easyweather.data.remote.model.toDomain
 import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherResult
+import com.dendron.easyweather.domain.preferences.WeatherPreferences
+import com.dendron.easyweather.domain.preferences.WeatherPreferencesRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -42,14 +45,18 @@ class RemoteWeatherRepositoryTest {
     @Mock
     private lateinit var weatherCacheDao: WeatherCacheDao
 
+    @Mock
+    private lateinit var weatherPreferencesRepository: WeatherPreferencesRepository
+
     private lateinit var weatherRepository: RemoteWeatherRepository
 
     private val lat = 1.0
     private val long = 2.0
 
     @Before
-    fun setUp() {
-        weatherRepository = RemoteWeatherRepository(api, weatherCacheDao)
+    fun setUp() = runTest {
+        whenever(weatherPreferencesRepository.getPreferences()).thenReturn(WeatherPreferences())
+        weatherRepository = RemoteWeatherRepository(api, weatherCacheDao, weatherPreferencesRepository)
     }
 
     @Test
@@ -57,13 +64,7 @@ class RemoteWeatherRepositoryTest {
         val fakeWeatherDto = getFakeWeatherDto()
         val expectedWeather = fakeWeatherDto.toDomain()
         whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
-
-        whenever(
-            api.getCurrentWeather(
-                latitude = lat,
-                longitude = long,
-            ),
-        ).thenReturn(fakeWeatherDto)
+        wheneverApiRequest().thenReturn(fakeWeatherDto)
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
@@ -71,7 +72,7 @@ class RemoteWeatherRepositoryTest {
             assertEquals(expectedWeather, success.weather)
             assertEquals(false, success.isFromCache)
             assertEquals(false, success.isStale)
-            assert(success.lastUpdatedAtMillis > 0L)
+            assertTrue(success.lastUpdatedAtMillis > 0L)
             awaitComplete()
         }
 
@@ -88,14 +89,7 @@ class RemoteWeatherRepositoryTest {
     @Test
     fun `getCurrentWeather should return network failure when API returns IOException`() = runTest {
         whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
-        whenever(
-            api.getCurrentWeather(
-                latitude = lat,
-                longitude = long,
-            ),
-        ).thenAnswer {
-            throw IOException()
-        }
+        wheneverApiRequest().thenAnswer { throw IOException() }
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
@@ -107,12 +101,7 @@ class RemoteWeatherRepositoryTest {
     @Test
     fun `getCurrentWeather should return network failure when API returns httpException`() = runTest {
         whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
-        whenever(
-            api.getCurrentWeather(
-                latitude = lat,
-                longitude = long,
-            ),
-        ).thenThrow(HttpException::class.java)
+        wheneverApiRequest().thenThrow(HttpException::class.java)
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
@@ -124,12 +113,7 @@ class RemoteWeatherRepositoryTest {
     @Test
     fun `getCurrentWeather should return unknown failure when API returns any type of exception`() = runTest {
         whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(null)
-        whenever(
-            api.getCurrentWeather(
-                latitude = lat,
-                longitude = long,
-            ),
-        ).thenAnswer { throw Exception("Error") }
+        wheneverApiRequest().thenAnswer { throw Exception("Error") }
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
@@ -146,7 +130,7 @@ class RemoteWeatherRepositoryTest {
         whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(
             expectedWeather.toCachedEntity(lat, long, cachedAtMillis),
         )
-        whenever(api.getCurrentWeather(latitude = lat, longitude = long)).thenReturn(fakeWeatherDto)
+        wheneverApiRequest().thenReturn(fakeWeatherDto)
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
@@ -161,7 +145,7 @@ class RemoteWeatherRepositoryTest {
             assertEquals(expectedWeather, refreshed.weather)
             assertEquals(false, refreshed.isFromCache)
             assertEquals(false, refreshed.isStale)
-            assert(refreshed.lastUpdatedAtMillis >= cachedAtMillis)
+            assertTrue(refreshed.lastUpdatedAtMillis >= cachedAtMillis)
             awaitComplete()
         }
     }
@@ -174,7 +158,7 @@ class RemoteWeatherRepositoryTest {
         whenever(weatherCacheDao.getByCoordinates(lat, long)).thenReturn(
             expectedWeather.toCachedEntity(lat, long, cachedAtMillis),
         )
-        whenever(api.getCurrentWeather(latitude = lat, longitude = long)).thenAnswer { throw IOException() }
+        wheneverApiRequest().thenAnswer { throw IOException() }
 
         weatherRepository.getCurrentWeather(lat, long).test {
             assertEquals(WeatherResult.Loading, awaitItem())
@@ -193,6 +177,15 @@ class RemoteWeatherRepositoryTest {
 
         verify(weatherCacheDao, never()).upsert(any())
     }
+
+    private suspend fun wheneverApiRequest() = whenever(
+        api.getCurrentWeather(
+            latitude = lat,
+            longitude = long,
+            temperatureUnit = "celsius",
+            windSpeedUnit = "kmh",
+        ),
+    )
 
     private fun getFakeWeatherDto() = WeatherDto(
         currentWeather = CurrentWeather(
@@ -216,7 +209,7 @@ class RemoteWeatherRepositoryTest {
             sunrise = "",
             sunset = "",
             time = "",
-            windspeed10mMax = "",
+            windspeed10mMax = "km/h",
         ),
         elevation = 0,
         generationtimeMs = 1.0,
@@ -227,7 +220,7 @@ class RemoteWeatherRepositoryTest {
             time = listOf("2026-06-14T13:00"),
         ),
         hourlyUnits = HourlyUnits(
-            temperature2m = "",
+            temperature2m = "°C",
             relativeHumidity2m = "",
             precipitationProbability = "",
             time = "",

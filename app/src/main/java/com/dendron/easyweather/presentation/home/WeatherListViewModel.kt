@@ -7,12 +7,17 @@ import com.dendron.easyweather.domain.WeatherFailure
 import com.dendron.easyweather.domain.WeatherResult
 import com.dendron.easyweather.domain.location.CurrentLocationFailure
 import com.dendron.easyweather.domain.location.CurrentLocationResult
+import com.dendron.easyweather.domain.location.LocationData
 import com.dendron.easyweather.domain.location.LocationSearchFailure
 import com.dendron.easyweather.domain.location.LocationSearchResult
 import com.dendron.easyweather.domain.location.SearchedLocation
+import com.dendron.easyweather.domain.preferences.SavedLocationPreference
+import com.dendron.easyweather.domain.preferences.SavedLocationSource
+import com.dendron.easyweather.domain.usecase.GetWeatherPreferencesUseCase
 import com.dendron.easyweather.domain.usecase.LoadCurrentLocationWeatherResult
 import com.dendron.easyweather.domain.usecase.LoadCurrentLocationWeatherUseCase
 import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
+import com.dendron.easyweather.domain.usecase.SaveLastLocationUseCase
 import com.dendron.easyweather.domain.usecase.SearchLocationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +31,8 @@ class WeatherListViewModel @Inject constructor(
     private val loadCurrentLocationWeatherUseCase: LoadCurrentLocationWeatherUseCase,
     private val loadWeatherForCoordinatesUseCase: LoadWeatherForCoordinatesUseCase,
     private val searchLocationsUseCase: SearchLocationsUseCase,
+    private val getWeatherPreferencesUseCase: GetWeatherPreferencesUseCase,
+    private val saveLastLocationUseCase: SaveLastLocationUseCase,
     private val weatherUiModelMapper: WeatherUiModelMapper,
 ) : ViewModel() {
 
@@ -85,7 +92,36 @@ class WeatherListViewModel @Inject constructor(
             latitude = location.latitude,
             longitude = location.longitude,
             feedbackMessageResId = R.string.weather_loading_message,
+            savedLocation = SavedLocationPreference(
+                latitude = location.latitude,
+                longitude = location.longitude,
+                name = location.displayName,
+                source = SavedLocationSource.Manual,
+            ),
         )
+    }
+
+    fun fetchStartupData(hasLocationPermissions: Boolean) {
+        viewModelScope.launch {
+            when (val lastLocation = getWeatherPreferencesUseCase().lastLocation) {
+                null -> if (hasLocationPermissions) {
+                    loadCurrentLocationWeather(R.string.weather_loading_message)
+                } else {
+                    showEmptyState()
+                }
+
+                else -> if (lastLocation.source == SavedLocationSource.Manual || !hasLocationPermissions) {
+                    fetchWeather(
+                        latitude = lastLocation.latitude,
+                        longitude = lastLocation.longitude,
+                        feedbackMessageResId = R.string.weather_loading_message,
+                        savedLocation = lastLocation,
+                    )
+                } else {
+                    loadCurrentLocationWeather(R.string.weather_loading_message)
+                }
+            }
+        }
     }
 
     fun fetchData() {
@@ -93,11 +129,11 @@ class WeatherListViewModel @Inject constructor(
     }
 
     fun refreshData() {
-        loadCurrentLocationWeather(R.string.weather_refreshing_message)
+        refreshLastViewedWeather(R.string.weather_refreshing_message)
     }
 
     fun retryData() {
-        loadCurrentLocationWeather(R.string.weather_retrying_message)
+        refreshLastViewedWeather(R.string.weather_retrying_message)
     }
 
     private fun loadCurrentLocationWeather(feedbackMessageResId: Int) {
@@ -113,6 +149,14 @@ class WeatherListViewModel @Inject constructor(
                     }
 
                     is LoadCurrentLocationWeatherResult.Success -> {
+                        saveLastViewedLocation(
+                            location = SavedLocationPreference(
+                                latitude = result.locationData.latitude,
+                                longitude = result.locationData.longitude,
+                                name = result.weather.locationName,
+                                source = SavedLocationSource.Current,
+                            ),
+                        )
                         showWeatherContent(
                             weather = result.weather,
                             lastUpdatedAtMillis = result.lastUpdatedAtMillis,
@@ -149,6 +193,7 @@ class WeatherListViewModel @Inject constructor(
         latitude: Double,
         longitude: Double,
         feedbackMessageResId: Int,
+        savedLocation: SavedLocationPreference,
     ) {
         val currentContent = _state.value as? WeatherScreenState.Content
         val isRefresh = currentContent != null || feedbackMessageResId != R.string.weather_loading_message
@@ -162,6 +207,7 @@ class WeatherListViewModel @Inject constructor(
             ).collect { result ->
                 when (result) {
                     is WeatherResult.Success -> {
+                        saveLastViewedLocation(savedLocation)
                         showWeatherContent(
                             weather = result.weather,
                             lastUpdatedAtMillis = result.lastUpdatedAtMillis,
@@ -179,6 +225,28 @@ class WeatherListViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun refreshLastViewedWeather(feedbackMessageResId: Int) {
+        viewModelScope.launch {
+            val lastLocation = getWeatherPreferencesUseCase().lastLocation
+            if (lastLocation?.source == SavedLocationSource.Manual) {
+                fetchWeather(
+                    latitude = lastLocation.latitude,
+                    longitude = lastLocation.longitude,
+                    feedbackMessageResId = feedbackMessageResId,
+                    savedLocation = lastLocation,
+                )
+            } else {
+                loadCurrentLocationWeather(feedbackMessageResId)
+            }
+        }
+    }
+
+    private fun saveLastViewedLocation(location: SavedLocationPreference) {
+        viewModelScope.launch {
+            saveLastLocationUseCase(location)
         }
     }
 

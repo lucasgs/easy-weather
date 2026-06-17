@@ -15,11 +15,17 @@ import com.dendron.easyweather.domain.location.CurrentLocationResult
 import com.dendron.easyweather.domain.location.LocationData
 import com.dendron.easyweather.domain.location.LocationProvider
 import com.dendron.easyweather.domain.location.LocationSearchRepository
+import com.dendron.easyweather.domain.preferences.SavedLocationPreference
+import com.dendron.easyweather.domain.preferences.SavedLocationSource
+import com.dendron.easyweather.domain.preferences.WeatherPreferences
+import com.dendron.easyweather.domain.preferences.WeatherPreferencesRepository
 import com.dendron.easyweather.domain.usecase.GetCurrentLocationUseCase
 import com.dendron.easyweather.domain.usecase.GetCurrentWeatherUseCase
+import com.dendron.easyweather.domain.usecase.GetWeatherPreferencesUseCase
 import com.dendron.easyweather.domain.usecase.LoadCurrentLocationWeatherUseCase
 import com.dendron.easyweather.domain.usecase.LoadWeatherForCoordinatesUseCase
 import com.dendron.easyweather.domain.usecase.RefreshWeatherUseCase
+import com.dendron.easyweather.domain.usecase.SaveLastLocationUseCase
 import com.dendron.easyweather.domain.usecase.SearchLocationsUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -49,12 +55,16 @@ class WeatherListViewModelTest {
     @Mock
     private lateinit var locationSearchRepository: LocationSearchRepository
 
+    @Mock
+    private lateinit var weatherPreferencesRepository: WeatherPreferencesRepository
+
     private lateinit var viewModel: WeatherListViewModel
-    private lateinit var weatherUiModelMapper: WeatherUiModelMapper
 
     @Before
-    fun setUp() {
-        weatherUiModelMapper = WeatherUiModelMapper(
+    fun setUp() = runTest {
+        whenever(weatherPreferencesRepository.getPreferences()).thenReturn(WeatherPreferences())
+
+        val weatherUiModelMapper = WeatherUiModelMapper(
             weatherDescriptionMapper = WeatherDescriptionMapper(),
             weatherIconMapper = WeatherIconMapper(),
             windDirectionMapper = WindDirectionMapper(),
@@ -70,6 +80,8 @@ class WeatherListViewModelTest {
             ),
             loadWeatherForCoordinatesUseCase = loadWeatherForCoordinatesUseCase,
             searchLocationsUseCase = SearchLocationsUseCase(locationSearchRepository),
+            getWeatherPreferencesUseCase = GetWeatherPreferencesUseCase(weatherPreferencesRepository),
+            saveLastLocationUseCase = SaveLastLocationUseCase(weatherPreferencesRepository),
             weatherUiModelMapper = weatherUiModelMapper,
         )
     }
@@ -79,18 +91,7 @@ class WeatherListViewModelTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
             CurrentLocationResult.Success(LocationData(LAT, LONG)),
         )
-
-        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
-            flow {
-                emit(WeatherResult.Loading)
-                emit(
-                    WeatherResult.Success(
-                        weather = fakeWeather,
-                        lastUpdatedAtMillis = LAST_UPDATED_AT_MILLIS,
-                    ),
-                )
-            },
-        )
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(successFlow(fakeWeather))
 
         viewModel.state.test {
             assertEquals(WeatherScreenState.Empty, awaitItem())
@@ -106,11 +107,60 @@ class WeatherListViewModelTest {
     }
 
     @Test
+    fun `fetchStartupData should load saved manual location without location permission`() = runTest {
+        whenever(weatherPreferencesRepository.getPreferences()).thenReturn(
+            WeatherPreferences(
+                lastLocation = SavedLocationPreference(
+                    latitude = LAT,
+                    longitude = LONG,
+                    name = "New York",
+                    source = SavedLocationSource.Manual,
+                ),
+            ),
+        )
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(successFlow(fakeWeather))
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchStartupData(hasLocationPermissions = false)
+
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
+            val content = awaitItem() as WeatherScreenState.Content
+            assertEquals(fakeWeatherUiModel, content.model)
+        }
+    }
+
+    @Test
+    fun `refreshData should reuse saved manual location`() = runTest {
+        whenever(weatherPreferencesRepository.getPreferences()).thenReturn(
+            WeatherPreferences(
+                lastLocation = SavedLocationPreference(
+                    latitude = LAT,
+                    longitude = LONG,
+                    name = "New York",
+                    source = SavedLocationSource.Manual,
+                ),
+            ),
+        )
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(successFlow(fakeWeather))
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.refreshData()
+
+            assertEquals(WeatherScreenState.Loading(R.string.weather_refreshing_message), awaitItem())
+            val content = awaitItem() as WeatherScreenState.Content
+            assertEquals(fakeWeatherUiModel, content.model)
+        }
+    }
+
+    @Test
     fun `fetchData should emit loading then error when repository fails`() = runTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
             CurrentLocationResult.Success(LocationData(LAT, LONG)),
         )
-
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
             flow {
                 emit(WeatherResult.Loading)
@@ -124,10 +174,7 @@ class WeatherListViewModelTest {
             viewModel.fetchData()
 
             assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
-            assertEquals(
-                WeatherScreenState.Error(ErrorReason.Network),
-                awaitItem(),
-            )
+            assertEquals(WeatherScreenState.Error(ErrorReason.Network), awaitItem())
         }
     }
 
@@ -136,7 +183,6 @@ class WeatherListViewModelTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
             CurrentLocationResult.Success(LocationData(LAT, LONG)),
         )
-
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
             flow {
                 emit(WeatherResult.Loading)
@@ -167,7 +213,6 @@ class WeatherListViewModelTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
             CurrentLocationResult.Success(LocationData(LAT, LONG)),
         )
-
         whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(
             flow {
                 emit(WeatherResult.Loading)
@@ -246,10 +291,7 @@ class WeatherListViewModelTest {
             viewModel.fetchData()
 
             assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
-            assertEquals(
-                WeatherScreenState.Error(ErrorReason.LocationUnavailable),
-                awaitItem(),
-            )
+            assertEquals(WeatherScreenState.Error(ErrorReason.LocationUnavailable), awaitItem())
         }
     }
 
@@ -282,7 +324,7 @@ class WeatherListViewModelTest {
         val fakeWeather = Weather(
             locationName = "New York",
             weatherUnit = WeatherUnits(
-                temperature = "",
+                temperature = "°C",
                 wind = "km/h",
             ),
             currentTemperature = 10.0,
@@ -302,5 +344,15 @@ class WeatherListViewModelTest {
                 DailyForecast(date = "2026-06-14", minTemperature = 2.0, maxTemperature = 8.0),
             ),
         )
+
+        fun successFlow(weather: Weather) = flow {
+            emit(WeatherResult.Loading)
+            emit(
+                WeatherResult.Success(
+                    weather = weather,
+                    lastUpdatedAtMillis = LAST_UPDATED_AT_MILLIS,
+                ),
+            )
+        }
     }
 }
