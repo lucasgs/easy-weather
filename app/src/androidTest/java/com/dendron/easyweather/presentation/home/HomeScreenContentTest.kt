@@ -128,6 +128,8 @@ class HomeScreenContentTest {
 
     @Test
     fun contentState_showsWeatherDetails() {
+        var changeCityRequests = 0
+
         setContent(
             state = WeatherScreenState.Content(
                 model = WeatherUiModel(
@@ -153,6 +155,7 @@ class HomeScreenContentTest {
                 ),
                 lastUpdatedAtMillis = 1_718_000_000_000,
             ),
+            onShowManualLocation = { changeCityRequests += 1 },
         )
 
         composeTestRule.onNodeWithText("New York").assertIsDisplayed()
@@ -173,6 +176,9 @@ class HomeScreenContentTest {
         composeTestRule.onNodeWithText("Sun").assertIsDisplayed()
         composeTestRule.onNodeWithText("14° / 24°").assertIsDisplayed()
         composeTestRule.onNodeWithText("Last updated:", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Change city").performClick()
+
+        assertEquals(1, changeCityRequests)
     }
 
     private fun setContent(

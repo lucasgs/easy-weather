@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import java.util.Date
 fun CurrentWeatherImageAndDescription(
     model: WeatherUiModel,
     lastUpdatedAtMillis: Long,
+    onChangeCity: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val lastUpdatedText = remember(lastUpdatedAtMillis) {
@@ -99,11 +101,21 @@ fun CurrentWeatherImageAndDescription(
                 }
             }
             Spacer(modifier = Modifier.height(WeatherDimens.largeSpacing))
-            Text(
-                text = stringResource(R.string.weather_last_updated, lastUpdatedText),
-                color = model.palette.secondaryText,
-                style = MaterialTheme.typography.body2,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = stringResource(R.string.weather_last_updated, lastUpdatedText),
+                    color = model.palette.secondaryText,
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedButton(onClick = onChangeCity) {
+                    Text(text = stringResource(R.string.weather_change_city_action))
+                }
+            }
         }
     }
 }

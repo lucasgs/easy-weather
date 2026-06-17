@@ -37,6 +37,7 @@ class WeatherListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<WeatherScreenState>(WeatherScreenState.Empty)
+    private var previousContentState: WeatherScreenState.Content? = null
     val state = _state.asStateFlow()
 
     fun showEmptyState() {
@@ -48,7 +49,13 @@ class WeatherListViewModel @Inject constructor(
     }
 
     fun showManualLocation() {
-        _state.value = WeatherScreenState.ManualLocation()
+        previousContentState = _state.value as? WeatherScreenState.Content ?: previousContentState
+        val current = _state.value as? WeatherScreenState.ManualLocation
+        _state.value = current ?: WeatherScreenState.ManualLocation()
+    }
+
+    fun dismissManualLocation() {
+        _state.value = previousContentState ?: WeatherScreenState.Empty
     }
 
     fun updateManualLocationQuery(query: String) {
@@ -176,7 +183,9 @@ class WeatherListViewModel @Inject constructor(
                             }
 
                             CurrentLocationFailure.Unavailable -> {
-                                _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
+                                if (!restoreSavedLocation(feedbackMessageResId)) {
+                                    _state.value = WeatherScreenState.Error(ErrorReason.LocationUnavailable)
+                                }
                             }
                         }
                     }
@@ -244,6 +253,17 @@ class WeatherListViewModel @Inject constructor(
         }
     }
 
+    private suspend fun restoreSavedLocation(feedbackMessageResId: Int): Boolean {
+        val lastLocation = getWeatherPreferencesUseCase().lastLocation ?: return false
+        fetchWeather(
+            latitude = lastLocation.latitude,
+            longitude = lastLocation.longitude,
+            feedbackMessageResId = feedbackMessageResId,
+            savedLocation = lastLocation,
+        )
+        return true
+    }
+
     private fun saveLastViewedLocation(location: SavedLocationPreference) {
         viewModelScope.launch {
             saveLastLocationUseCase(location)
@@ -266,7 +286,7 @@ class WeatherListViewModel @Inject constructor(
         isStale: Boolean,
         isFromCache: Boolean,
     ) {
-        _state.value = WeatherScreenState.Content(
+        val content = WeatherScreenState.Content(
             model = weatherUiModelMapper.map(weather),
             lastUpdatedAtMillis = lastUpdatedAtMillis,
             feedbackMessageResId = when {
@@ -276,6 +296,8 @@ class WeatherListViewModel @Inject constructor(
             },
             isStale = isStale,
         )
+        previousContentState = content
+        _state.value = content
     }
 }
 

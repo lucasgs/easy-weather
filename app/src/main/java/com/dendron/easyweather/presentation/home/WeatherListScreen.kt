@@ -81,7 +81,7 @@ fun HomeScreen(
         onManualLocationQueryChange = viewModel::updateManualLocationQuery,
         onManualLocationSearch = viewModel::searchManualLocations,
         onManualLocationSelect = viewModel::selectManualLocation,
-        onManualLocationBack = viewModel::showEmptyState,
+        onManualLocationBack = viewModel::dismissManualLocation,
         onOpenAppSettings = context::openAppSettings,
         onOpenLocationSettings = context::openLocationSettings,
         isRequestingPermission = isRequestingPermission,
@@ -148,6 +148,7 @@ internal fun HomeScreenContent(
                 lastUpdatedAtMillis = currentState.lastUpdatedAtMillis,
                 isRefreshing = currentState.isRefreshing,
                 onRefresh = onRefresh,
+                onChangeCity = onShowManualLocation,
                 modifier = Modifier.fillMaxSize(),
             )
 
@@ -209,6 +210,7 @@ private fun WeatherContent(
     lastUpdatedAtMillis: Long,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    onChangeCity: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val refreshState = rememberPullRefreshState(isRefreshing, onRefresh)
@@ -225,6 +227,7 @@ private fun WeatherContent(
                 CurrentWeatherImageAndDescription(
                     model = model,
                     lastUpdatedAtMillis = lastUpdatedAtMillis,
+                    onChangeCity = onChangeCity,
                     modifier = Modifier.padding(top = WeatherDimens.screenPadding),
                 )
             }

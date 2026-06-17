@@ -107,6 +107,28 @@ class WeatherListViewModelTest {
     }
 
     @Test
+    fun `showManualLocation then dismissManualLocation should restore content`() = runTest {
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Success(LocationData(LAT, LONG)),
+        )
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(successFlow(fakeWeather))
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
+            val content = awaitItem() as WeatherScreenState.Content
+
+            viewModel.showManualLocation()
+            assertEquals(WeatherScreenState.ManualLocation(), awaitItem())
+
+            viewModel.dismissManualLocation()
+            assertEquals(content, awaitItem())
+        }
+    }
+
+    @Test
     fun `fetchStartupData should load saved manual location without location permission`() = runTest {
         whenever(weatherPreferencesRepository.getPreferences()).thenReturn(
             WeatherPreferences(
@@ -280,7 +302,40 @@ class WeatherListViewModelTest {
     }
 
     @Test
-    fun `fetchData should emit location unavailable error when no location is returned`() = runTest {
+    fun `fetchData should restore saved location when current location is unavailable`() = runTest {
+        whenever(weatherPreferencesRepository.getPreferences()).thenReturn(
+            WeatherPreferences(
+                lastLocation = SavedLocationPreference(
+                    latitude = LAT,
+                    longitude = LONG,
+                    name = "New York",
+                    source = SavedLocationSource.Current,
+                ),
+            ),
+        )
+        whenever(locationProvider.getCurrentLocation()).thenReturn(
+            CurrentLocationResult.Failure(CurrentLocationFailure.Unavailable),
+        )
+        whenever(weatherRepository.getCurrentWeather(LAT, LONG)).thenReturn(successFlow(fakeWeather))
+
+        viewModel.state.test {
+            assertEquals(WeatherScreenState.Empty, awaitItem())
+
+            viewModel.fetchData()
+
+            assertEquals(WeatherScreenState.Loading(R.string.weather_loading_message), awaitItem())
+            val next = awaitItem()
+            val content = if (next is WeatherScreenState.Content) {
+                next
+            } else {
+                awaitItem() as WeatherScreenState.Content
+            }
+            assertEquals(fakeWeatherUiModel, content.model)
+        }
+    }
+
+    @Test
+    fun `fetchData should emit location unavailable error when no location is returned and no saved location exists`() = runTest {
         whenever(locationProvider.getCurrentLocation()).thenReturn(
             CurrentLocationResult.Failure(CurrentLocationFailure.Unavailable),
         )

@@ -43,5 +43,6 @@
     <string name="weather_manual_message">Skip location access and check the weather for any city.</string>
     <string name="weather_manual_search_label">City name</string>
     <string name="weather_manual_search_action">Search</string>
+    <string name="weather_change_city_action">Change city</string>
     <string name="weather_manual_back_action">Back</string>
 </resources>
