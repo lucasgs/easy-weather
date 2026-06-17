@@ -14,7 +14,7 @@ buildscript {
         turbine_version = '0.12.1'
 
         //coil_version = "2.2.2"
-        //room_version = "2.5.0"
+        room_version = '2.6.1'
 
     }
 }

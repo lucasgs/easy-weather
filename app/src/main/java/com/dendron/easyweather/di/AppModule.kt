@@ -2,6 +2,9 @@ package com.dendron.easyweather.di
 
 import android.app.Application
 import android.content.Context
+import androidx.room.Room
+import com.dendron.easyweather.data.local.WeatherCacheDao
+import com.dendron.easyweather.data.local.WeatherDatabase
 import com.dendron.easyweather.data.location.DefaultLocationProvider
 import com.dendron.easyweather.data.remote.LocationSearchApi
 import com.dendron.easyweather.data.remote.NetworkConfig
@@ -50,6 +53,19 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideWeatherDatabase(@ApplicationContext appContext: Context): WeatherDatabase =
+        Room.databaseBuilder(
+            appContext,
+            WeatherDatabase::class.java,
+            "easyweather.db",
+        ).build()
+
+    @Provides
+    @Singleton
+    fun provideWeatherCacheDao(database: WeatherDatabase): WeatherCacheDao = database.weatherCacheDao()
+
+    @Provides
+    @Singleton
     fun provideWeatherApi(okHttpClient: OkHttpClient): WeatherApi =
         Retrofit.Builder()
             .client(okHttpClient)
@@ -60,8 +76,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideWeatherRepository(api: WeatherApi): WeatherRepository {
-        return RemoteWeatherRepository(api)
+    fun provideWeatherRepository(
+        api: WeatherApi,
+        weatherCacheDao: WeatherCacheDao,
+    ): WeatherRepository {
+        return RemoteWeatherRepository(api, weatherCacheDao)
     }
 
     @Provides

@@ -2,6 +2,7 @@ package com.dendron.easyweather.data.remote
 
 import app.cash.turbine.test
 import com.dendron.easyweather.MainDispatcherRule
+import com.dendron.easyweather.data.local.WeatherCacheDao
 import com.dendron.easyweather.data.remote.model.CurrentWeather
 import com.dendron.easyweather.data.remote.model.Daily
 import com.dendron.easyweather.data.remote.model.DailyUnits
@@ -20,6 +21,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.check
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import retrofit2.HttpException
 import java.io.IOException
@@ -33,6 +36,9 @@ class RemoteWeatherRepositoryTest {
     @Mock
     private lateinit var api: WeatherApi
 
+    @Mock
+    private lateinit var weatherCacheDao: WeatherCacheDao
+
     private lateinit var weatherRepository: RemoteWeatherRepository
 
     private val lat = 1.0
@@ -40,7 +46,7 @@ class RemoteWeatherRepositoryTest {
 
     @Before
     fun setUp() {
-        weatherRepository = RemoteWeatherRepository(api)
+        weatherRepository = RemoteWeatherRepository(api, weatherCacheDao)
     }
 
     @Test
@@ -60,6 +66,15 @@ class RemoteWeatherRepositoryTest {
             assertEquals(WeatherResult.Success(expectedWeather), awaitItem())
             awaitComplete()
         }
+
+        verify(weatherCacheDao).upsert(
+            check { cachedWeather ->
+                assertEquals(lat, cachedWeather.latitude, 0.0)
+                assertEquals(long, cachedWeather.longitude, 0.0)
+                assertEquals(expectedWeather.locationName, cachedWeather.locationName)
+                assertEquals(expectedWeather.currentTemperature, cachedWeather.currentTemperature, 0.0)
+            },
+        )
     }
 
     @Test
